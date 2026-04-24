@@ -90,20 +90,21 @@ Flutter Web / Android
 
 ## 4.2 后端技术栈
 
-后端建议采用 Node.js + NestJS 架构，技术栈如下：
+后端采用 Bun + Elysia + Drizzle ORM 架构，技术栈如下：
 
-- Node.js
-- NestJS
+- bun
+- Elysia
 - TypeScript
-- Prisma
+- Drizzle ORM
 - PostgreSQL
 - Redis
 
 原因如下：
 
-- NestJS 天然适合构建结构化后端系统，模块边界清晰
+- Elysia 极致轻量，API 设计現代，类型安全
+- Bun 运行时启动快（~100ms），与 Flutter 开发体验一致
 - TypeScript 与 Dart 都是强类型语言，前后端模型协作更顺畅
-- Prisma 适合数据库模型管理、迁移和类型安全查询
+- Drizzle ORM 轻量级、原生支持 Bun，无需额外兼容层
 - PostgreSQL 适合结构化业务数据存储
 - Redis 适合缓存 URL 拉取结果、同步状态和频率控制
 
@@ -178,33 +179,53 @@ lib/
 
 ## 6. 后端架构设计
 
-后端采用模块化设计，推荐模块如下：
+后端采用 Elysia 路由 + Drizzle ORM 设计，推荐目录如下：
 
-```text
-src/
-  modules/
-    timetable/
-    import/
-    source/
-    parser/
-    sync/
-    proxy/
-    user/
-  common/
-    interceptors/
-    filters/
-    guards/
-    utils/
-  infra/
-    prisma/
-    redis/
-    logger/
+```
+app/
+├── src/
+│   ├── index.ts            # 入口文件
+│   ├── app.ts             # Elysia 应用配置
+│   ├── db/
+│   │   ├── index.ts      # 数据库连接
+│   │   ├── schema.ts    # 数据模型定义
+│   │   └── migrations/  # 迁移文件
+│   ├── routes/
+│   │   ├── timetable.ts
+│   │   ├── import.ts
+│   │   └── source.ts
+│   ├── services/
+│   │   ├── timetable.service.ts
+│   │   ├── import.service.ts
+│   │   ├── source.service.ts
+│   │   └── sync.service.ts
+│   ├── parsers/
+│   │   ├── strategies/
+│   │   │   ├── fetcher.strategy.ts
+│   │   │   ├── direct.fetcher.ts
+│   │   │   └── proxy.fetcher.ts
+│   │   └── importers/
+│   │       ├── importer.interface.ts
+│   │       ├── ics.importer.ts
+│   │       ├── json.importer.ts
+│   │       └── html.importer.ts
+│   ├── utils/
+│   │   └── url.validator.ts
+│   └── config/
+│       └── index.ts
+├── drizzle.config.ts
+├── .env
+└── package.json
 ```
 
 各模块职责如下：
 
-- `timetable`：课程表业务逻辑，负责课表聚合、查询、更新
-- `import`：处理导入流程，协调 URL 获取、来源识别、解析与保存
+- `routes/`：Elysia 路由定义，负责 HTTP 请求处理
+- `services/`：业务逻辑层，负责数据处理
+- `parsers/`：解析器模块，来源识别与数据解析
+- `db/`：Drizzle ORM 模型定义与数据库连接
+- `utils/`：工具函数，URL 校验等
+- `config/`：配置管理
 - `source`：管理来源地址、来源状态与来源元信息
 - `parser`：各类导入器和解析器
 - `sync`：处理刷新、同步记录和任务调度
@@ -751,7 +772,7 @@ TimetableSource 1 --- n SyncRecord
 
 ## 18. 结论
 
-GreenStone 课程表系统采用 Flutter 前端、NestJS 后端、PostgreSQL 数据库的前后端分离架构，面向 Web 与 Android 双端提供统一课程表服务。系统以课程表统一领域模型为核心，以导入、解析、存储、查询、刷新为主线，具备完整的信息系统基本构成，符合课程设计中“前端 + 后端 + 数据库 + 多端 Web 项目”的建设要求。
+GreenStone 课程表系统采用 Flutter 前端、Bun + Elysia + Drizzle 后端、PostgreSQL 数据库的前后端分离架构，面向 Web 与 Android 双端提供统一课程表服务。系统以课程表统一领域模型为核心，以导入、解析、存储、查询、刷新为主线，具备完整的信息系统基本构成，符合课程设计中“前端 + 后端 + 数据库 + 多端 Web 项目”的建设要求。
 
 ***
 

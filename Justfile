@@ -49,6 +49,3 @@
 @build-apk:
   flutter build apk
 
-# 构建 release APK
-@build-apk-release:
-  flutter build apk --release
