@@ -2,90 +2,62 @@
 
 ## 项目概述
 
-GreenStone 课程表系统是一个面向学生用户的多端课程表应用，支持课程表导入、课程展示、来源管理与同步刷新。前后端分离架构，当前仅实现 Flutter 前端（Web + Android）。
+GreenStone 课程表系统是一个面向学生用户的多端课程表应用，支持课程表导入、课程展示、来源管理与同步刷新。前后端分离架构。
 
-## 技术栈
+**当前状态**：Flutter 前端骨架阶段（Web + Android），后端未实现。
+
+## 技术栈（当前）
 
 - **前端框架**: Flutter (^3.11.3)
 - **语言**: Dart
-- **目标平台**: Web, Android
 - **包名**: schedule
-
-### 预计技术栈（设计文档）
-
-- 状态管理: flutter_riverpod
-- 路由: go_router
-- 网络: dio
-- 数据模型: freezed + json_serializable
-- 后端(未实现): Bun + Elysia + Drizzle ORM + PostgreSQL + Redis
+- **目标平台**: Web, Android
+- **Linter**: flutter_lints
 
 ## 项目结构
 
 ```
 GreenStone_ClassSchedule/
-├── .envrc              # direnv 环境变量配置
-├── Justfile            # just 任务脚本
-├── pubspec.yaml        # Flutter 依赖配置
+├── .envrc              # direnv 环境变量（Android SDK、Flutter PATH）
+├── Justfile            # 任务脚本
+├── pubspec.yaml        # Flutter 依赖
 ├── analysis_options.yaml  # Dart linter 配置
-├── README.md           # 项目说明
-├── design.md          # 系统设计文档
 ├── lib/
-│   └── main.dart      # 应用入口（当前仅有此文件）
+│   └── main.dart      # 应用入口（Flutter 默认模板，需重写）
 ├── test/
 ├── android/           # Android 构建配置
-├── web/              # Web 构建配置
-└── app/              # 后端项目
-    ├── src/
-    │   ├── index.ts
-    │   ├── routes/
-    │   ├── services/
-    │   ├── parsers/
-    │   ├── db/
-    │   └── utils/
-    ├── drizzle.config.ts
-    └── package.json
+├── web/               # Web 构建配置
+└── app/               # 后端项目（未实现，权限受限）
 ```
 
-## 核心目录
+## 开发者命令
 
-| 目录 | 用途 |
-|------|------|
-| `lib/` | 源代码 |
-| `lib/app/` | 路由、主题（规划） |
-| `lib/core/` | 网络、常量、工具、基础组件（规划） |
-| `lib/features/` | 功能模块：auth, import, timetable, source, settings（规划） |
+```bash
+just init         # flutter clean && flutter pub get
+just analyze      # flutter analyze（检查代码问题）
+just fmt          # dart format .
+just run-web      # flutter run -d web-server
+just run-android  # flutter run -d android
+just build-apk    # flutter build apk
+just build-web    # flutter build web
+just devices      # flutter devices
+just outdated     # flutter pub outdated
+```
 
-## 命令
-
-### 前端命令
-
-| 任务 | 命令 |
-|------|------|
-| 初始化 | `just init` |
-| 分析代码 | `just analyze` 或 `flutter analyze` |
-| 格式化 | `just fmt` 或 `dart format .` |
-| 运行 Web | `just run-web` |
-| 运行 Android | `just run-android` |
-| 构建 APK | `just build-apk` |
-| 构建 Web | `just build-web` |
-
-### 后端命令
-
-| 任务 | 命令 |
-|------|------|
-| 初始化后端 | `cd app && bun install` |
-| 运行后端 | `cd app && bun run src/index.ts` |
-| 数据库迁移 | `cd app && bunx drizzle-kit push` |
-
-
-## 开发环境
+## 开发环境要求
 
 - **Android SDK**: 36 / build-tools: 36.0.0
 - **Flutter SDK**: ^3.11.3
-- **Lints**: flutter_lints
-- **环境管理**: direnv
+- **环境管理**: direnv（必须执行 `direnv allow` 加载 .envrc）
 
 ## Setup
 
-1. **启用 direnv**: `direnv allow`（加载 .envrc 中的环境变量）
-2. **初始化**: `just init`（执行 flutter clean && flutter pub get）
+1. `direnv allow`（进入目录时自动加载环境变量）
+2. `just init`（初始化项目）
+3. `just analyze`（验证代码无警告/错误）
+
+## 注意事项
+
+- 当前 `lib/main.dart` 是 Flutter 默认模板，存在语法错误（`ColorScheme.fromSeed` 写成 `.fromSeed`），需重写
+- 计划中的技术栈（flutter_riverpod、go_router、dio、freezed）尚未添加
+- `just run` 命令在 Justfile 中未定义，直接使用 `flutter run` 或指定 `-d web-server`/`-d android`
