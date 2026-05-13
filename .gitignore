@@ -46,3 +46,4 @@ app.*.map.json
 /android/local.properties
 /flutter-env.ps1
 /dev-shell.local.ps1
+app/data/
