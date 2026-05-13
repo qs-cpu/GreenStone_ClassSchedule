@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "fast-bmp": "^4.0.1",
+    "htmlrewriter": "^0.0.13"
+  }
+}
