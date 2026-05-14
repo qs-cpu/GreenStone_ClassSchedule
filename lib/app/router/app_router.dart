@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import '../../features/timetable/presentation/timetable_home_page.dart';
 import '../../features/import/presentation/import_page.dart';
+import '../../features/source/presentation/source_list_page.dart';
+import '../../features/source/presentation/source_detail_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -13,12 +15,18 @@ final GoRouter appRouter = GoRouter(
       path: '/import',
       builder: (context, state) => const ImportPage(),
     ),
-    // 预留来源管理页面路由
     GoRoute(
       path: '/sources',
-      builder: (context, state) {
-        throw UnimplementedError('SourcesPage is not implemented yet');
-      },
+      builder: (context, state) => const SourceListPage(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return SourceDetailPage(sourceId: id);
+          },
+        ),
+      ],
     ),
   ],
 );
