@@ -14,10 +14,7 @@ _TimetableSource _$TimetableSourceFromJson(Map<String, dynamic> json) =>
       finalUrl: json['finalUrl'] as String?,
       sourceType: json['sourceType'] as String,
       importerKey: json['importerKey'] as String?,
-      etag: json['etag'] as String?,
-      lastModified: json['lastModified'] == null
-          ? null
-          : DateTime.parse(json['lastModified'] as String),
+      lastModified: json['lastModified'] as String?,
       lastSyncedAt: json['lastSyncedAt'] == null
           ? null
           : DateTime.parse(json['lastSyncedAt'] as String),
@@ -40,8 +37,7 @@ Map<String, dynamic> _$TimetableSourceToJson(_TimetableSource instance) =>
       'finalUrl': instance.finalUrl,
       'sourceType': instance.sourceType,
       'importerKey': instance.importerKey,
-      'etag': instance.etag,
-      'lastModified': instance.lastModified?.toIso8601String(),
+      'lastModified': instance.lastModified,
       'lastSyncedAt': instance.lastSyncedAt?.toIso8601String(),
       'syncStatus': instance.syncStatus,
       'errorMessage': instance.errorMessage,

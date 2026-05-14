@@ -10,7 +10,7 @@ _Course _$CourseFromJson(Map<String, dynamic> json) => _Course(
   id: json['id'] as String,
   timetableId: json['timetableId'] as String,
   title: json['title'] as String,
-  teacher: json['teacher'] as String,
+  teacher: json['teacher'] as String?,
   color: json['color'] as String?,
   remark: json['remark'] as String?,
   createdAt: DateTime.parse(json['createdAt'] as String),

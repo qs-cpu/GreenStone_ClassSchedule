@@ -1,43 +1,29 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ApiClient {
-  static final ApiClient _instance = ApiClient._internal();
-  late final Dio dio;
+// 提供全局的 Dio 实例，替代手写单例模式
+final dioProvider = Provider<Dio>((ref) {
+  // 从环境变量获取，如果不提供则根据是否为 web 选择默认值
+  const defaultUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+  const baseUrl = String.fromEnvironment('API_URL', defaultValue: defaultUrl);
 
-  factory ApiClient() {
-    return _instance;
-  }
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      responseType: ResponseType.json,
+    ),
+  );
 
-  ApiClient._internal() {
-    dio = Dio(
-      BaseOptions(
-        // 请根据实际环境调整 baseURL
-        // Windows/Mac 本地跑 Android 模拟器时 localhost 可能是 10.0.2.2 
-        // WSL 中的端口如果做了映射也是 localhost
-        baseUrl: 'http://localhost:3000',
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-        responseType: ResponseType.json,
-      ),
-    );
+  dio.interceptors.add(LogInterceptor(
+    requestBody: true,
+    responseBody: true,
+  ));
 
-    // 添加日志拦截器等
-    dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-    ));
-
-    // 错误处理拦截器
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onError: (DioException e, handler) {
-          // 这里可以进行全局的错误拦截与提示转换
-          return handler.next(e);
-        },
-      ),
-    );
-  }
-}
+  return dio;
+});
 
 // 核心 API 路径常量
 class ApiEndpoints {

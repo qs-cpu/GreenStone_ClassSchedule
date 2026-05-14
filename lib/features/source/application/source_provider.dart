@@ -11,20 +11,21 @@ final sourceDetailProvider = FutureProvider.family<TimetableSource, String>((ref
 });
 
 final syncSourceProvider = StateNotifierProvider<SyncNotifier, AsyncValue<void>>((ref) {
-  return SyncNotifier(ref.read(sourceRepositoryProvider));
+  return SyncNotifier(ref);
 });
 
 class SyncNotifier extends StateNotifier<AsyncValue<void>> {
-  final SourceRepository _repository;
+  final Ref _ref;
 
-  SyncNotifier(this._repository) : super(const AsyncData(null));
+  SyncNotifier(this._ref) : super(const AsyncData(null));
 
-  Future<void> syncSource(String id, WidgetRef ref) async {
+  Future<void> syncSource(String id) async {
     state = const AsyncLoading();
     try {
-      await _repository.syncSource(id);
+      final repository = _ref.read(sourceRepositoryProvider);
+      await repository.syncSource(id);
       // 成功后强制刷新详情页面数据
-      ref.invalidate(sourceDetailProvider(id));
+      _ref.invalidate(sourceDetailProvider(id));
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

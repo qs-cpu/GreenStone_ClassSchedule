@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$TimetableSource {
 
  String get id; String get userId; String get originalUrl; String? get finalUrl; String get sourceType;// "ICS", "JSON", "HTML", "UNKNOWN"
- String? get importerKey; String? get etag; DateTime? get lastModified; DateTime? get lastSyncedAt; String get syncStatus;// "idle", "syncing", "success", "failed"
+ String? get importerKey; String? get lastModified; DateTime? get lastSyncedAt; String get syncStatus;// "idle", "syncing", "success", "failed"
  String? get errorMessage; DateTime get createdAt; DateTime get updatedAt; List<SyncRecord> get syncRecords;
 /// Create a copy of TimetableSource
 /// with the given fields replaced by the non-null parameter values.
@@ -30,16 +30,16 @@ $TimetableSourceCopyWith<TimetableSource> get copyWith => _$TimetableSourceCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableSource&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.finalUrl, finalUrl) || other.finalUrl == finalUrl)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.importerKey, importerKey) || other.importerKey == importerKey)&&(identical(other.etag, etag) || other.etag == etag)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.syncRecords, syncRecords));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableSource&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.finalUrl, finalUrl) || other.finalUrl == finalUrl)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.importerKey, importerKey) || other.importerKey == importerKey)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other.syncRecords, syncRecords));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,originalUrl,finalUrl,sourceType,importerKey,etag,lastModified,lastSyncedAt,syncStatus,errorMessage,createdAt,updatedAt,const DeepCollectionEquality().hash(syncRecords));
+int get hashCode => Object.hash(runtimeType,id,userId,originalUrl,finalUrl,sourceType,importerKey,lastModified,lastSyncedAt,syncStatus,errorMessage,createdAt,updatedAt,const DeepCollectionEquality().hash(syncRecords));
 
 @override
 String toString() {
-  return 'TimetableSource(id: $id, userId: $userId, originalUrl: $originalUrl, finalUrl: $finalUrl, sourceType: $sourceType, importerKey: $importerKey, etag: $etag, lastModified: $lastModified, lastSyncedAt: $lastSyncedAt, syncStatus: $syncStatus, errorMessage: $errorMessage, createdAt: $createdAt, updatedAt: $updatedAt, syncRecords: $syncRecords)';
+  return 'TimetableSource(id: $id, userId: $userId, originalUrl: $originalUrl, finalUrl: $finalUrl, sourceType: $sourceType, importerKey: $importerKey, lastModified: $lastModified, lastSyncedAt: $lastSyncedAt, syncStatus: $syncStatus, errorMessage: $errorMessage, createdAt: $createdAt, updatedAt: $updatedAt, syncRecords: $syncRecords)';
 }
 
 
@@ -50,7 +50,7 @@ abstract mixin class $TimetableSourceCopyWith<$Res>  {
   factory $TimetableSourceCopyWith(TimetableSource value, $Res Function(TimetableSource) _then) = _$TimetableSourceCopyWithImpl;
 @useResult
 $Res call({
- String id, String userId, String originalUrl, String? finalUrl, String sourceType, String? importerKey, String? etag, DateTime? lastModified, DateTime? lastSyncedAt, String syncStatus, String? errorMessage, DateTime createdAt, DateTime updatedAt, List<SyncRecord> syncRecords
+ String id, String userId, String originalUrl, String? finalUrl, String sourceType, String? importerKey, String? lastModified, DateTime? lastSyncedAt, String syncStatus, String? errorMessage, DateTime createdAt, DateTime updatedAt, List<SyncRecord> syncRecords
 });
 
 
@@ -67,7 +67,7 @@ class _$TimetableSourceCopyWithImpl<$Res>
 
 /// Create a copy of TimetableSource
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? originalUrl = null,Object? finalUrl = freezed,Object? sourceType = null,Object? importerKey = freezed,Object? etag = freezed,Object? lastModified = freezed,Object? lastSyncedAt = freezed,Object? syncStatus = null,Object? errorMessage = freezed,Object? createdAt = null,Object? updatedAt = null,Object? syncRecords = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? originalUrl = null,Object? finalUrl = freezed,Object? sourceType = null,Object? importerKey = freezed,Object? lastModified = freezed,Object? lastSyncedAt = freezed,Object? syncStatus = null,Object? errorMessage = freezed,Object? createdAt = null,Object? updatedAt = null,Object? syncRecords = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -75,9 +75,8 @@ as String,originalUrl: null == originalUrl ? _self.originalUrl : originalUrl // 
 as String,finalUrl: freezed == finalUrl ? _self.finalUrl : finalUrl // ignore: cast_nullable_to_non_nullable
 as String?,sourceType: null == sourceType ? _self.sourceType : sourceType // ignore: cast_nullable_to_non_nullable
 as String,importerKey: freezed == importerKey ? _self.importerKey : importerKey // ignore: cast_nullable_to_non_nullable
-as String?,etag: freezed == etag ? _self.etag : etag // ignore: cast_nullable_to_non_nullable
 as String?,lastModified: freezed == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
-as DateTime?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
+as String?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
 as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -168,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String originalUrl,  String? finalUrl,  String sourceType,  String? importerKey,  String? etag,  DateTime? lastModified,  DateTime? lastSyncedAt,  String syncStatus,  String? errorMessage,  DateTime createdAt,  DateTime updatedAt,  List<SyncRecord> syncRecords)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String originalUrl,  String? finalUrl,  String sourceType,  String? importerKey,  String? lastModified,  DateTime? lastSyncedAt,  String syncStatus,  String? errorMessage,  DateTime createdAt,  DateTime updatedAt,  List<SyncRecord> syncRecords)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimetableSource() when $default != null:
-return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sourceType,_that.importerKey,_that.etag,_that.lastModified,_that.lastSyncedAt,_that.syncStatus,_that.errorMessage,_that.createdAt,_that.updatedAt,_that.syncRecords);case _:
+return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sourceType,_that.importerKey,_that.lastModified,_that.lastSyncedAt,_that.syncStatus,_that.errorMessage,_that.createdAt,_that.updatedAt,_that.syncRecords);case _:
   return orElse();
 
 }
@@ -189,10 +188,10 @@ return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sou
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String originalUrl,  String? finalUrl,  String sourceType,  String? importerKey,  String? etag,  DateTime? lastModified,  DateTime? lastSyncedAt,  String syncStatus,  String? errorMessage,  DateTime createdAt,  DateTime updatedAt,  List<SyncRecord> syncRecords)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String originalUrl,  String? finalUrl,  String sourceType,  String? importerKey,  String? lastModified,  DateTime? lastSyncedAt,  String syncStatus,  String? errorMessage,  DateTime createdAt,  DateTime updatedAt,  List<SyncRecord> syncRecords)  $default,) {final _that = this;
 switch (_that) {
 case _TimetableSource():
-return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sourceType,_that.importerKey,_that.etag,_that.lastModified,_that.lastSyncedAt,_that.syncStatus,_that.errorMessage,_that.createdAt,_that.updatedAt,_that.syncRecords);case _:
+return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sourceType,_that.importerKey,_that.lastModified,_that.lastSyncedAt,_that.syncStatus,_that.errorMessage,_that.createdAt,_that.updatedAt,_that.syncRecords);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +208,10 @@ return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sou
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String originalUrl,  String? finalUrl,  String sourceType,  String? importerKey,  String? etag,  DateTime? lastModified,  DateTime? lastSyncedAt,  String syncStatus,  String? errorMessage,  DateTime createdAt,  DateTime updatedAt,  List<SyncRecord> syncRecords)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String originalUrl,  String? finalUrl,  String sourceType,  String? importerKey,  String? lastModified,  DateTime? lastSyncedAt,  String syncStatus,  String? errorMessage,  DateTime createdAt,  DateTime updatedAt,  List<SyncRecord> syncRecords)?  $default,) {final _that = this;
 switch (_that) {
 case _TimetableSource() when $default != null:
-return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sourceType,_that.importerKey,_that.etag,_that.lastModified,_that.lastSyncedAt,_that.syncStatus,_that.errorMessage,_that.createdAt,_that.updatedAt,_that.syncRecords);case _:
+return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sourceType,_that.importerKey,_that.lastModified,_that.lastSyncedAt,_that.syncStatus,_that.errorMessage,_that.createdAt,_that.updatedAt,_that.syncRecords);case _:
   return null;
 
 }
@@ -224,7 +223,7 @@ return $default(_that.id,_that.userId,_that.originalUrl,_that.finalUrl,_that.sou
 @JsonSerializable()
 
 class _TimetableSource implements TimetableSource {
-  const _TimetableSource({required this.id, required this.userId, required this.originalUrl, this.finalUrl, required this.sourceType, this.importerKey, this.etag, this.lastModified, this.lastSyncedAt, required this.syncStatus, this.errorMessage, required this.createdAt, required this.updatedAt, final  List<SyncRecord> syncRecords = const []}): _syncRecords = syncRecords;
+  const _TimetableSource({required this.id, required this.userId, required this.originalUrl, this.finalUrl, required this.sourceType, this.importerKey, this.lastModified, this.lastSyncedAt, required this.syncStatus, this.errorMessage, required this.createdAt, required this.updatedAt, final  List<SyncRecord> syncRecords = const []}): _syncRecords = syncRecords;
   factory _TimetableSource.fromJson(Map<String, dynamic> json) => _$TimetableSourceFromJson(json);
 
 @override final  String id;
@@ -234,8 +233,7 @@ class _TimetableSource implements TimetableSource {
 @override final  String sourceType;
 // "ICS", "JSON", "HTML", "UNKNOWN"
 @override final  String? importerKey;
-@override final  String? etag;
-@override final  DateTime? lastModified;
+@override final  String? lastModified;
 @override final  DateTime? lastSyncedAt;
 @override final  String syncStatus;
 // "idle", "syncing", "success", "failed"
@@ -263,16 +261,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableSource&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.finalUrl, finalUrl) || other.finalUrl == finalUrl)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.importerKey, importerKey) || other.importerKey == importerKey)&&(identical(other.etag, etag) || other.etag == etag)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._syncRecords, _syncRecords));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableSource&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.finalUrl, finalUrl) || other.finalUrl == finalUrl)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.importerKey, importerKey) || other.importerKey == importerKey)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&const DeepCollectionEquality().equals(other._syncRecords, _syncRecords));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,originalUrl,finalUrl,sourceType,importerKey,etag,lastModified,lastSyncedAt,syncStatus,errorMessage,createdAt,updatedAt,const DeepCollectionEquality().hash(_syncRecords));
+int get hashCode => Object.hash(runtimeType,id,userId,originalUrl,finalUrl,sourceType,importerKey,lastModified,lastSyncedAt,syncStatus,errorMessage,createdAt,updatedAt,const DeepCollectionEquality().hash(_syncRecords));
 
 @override
 String toString() {
-  return 'TimetableSource(id: $id, userId: $userId, originalUrl: $originalUrl, finalUrl: $finalUrl, sourceType: $sourceType, importerKey: $importerKey, etag: $etag, lastModified: $lastModified, lastSyncedAt: $lastSyncedAt, syncStatus: $syncStatus, errorMessage: $errorMessage, createdAt: $createdAt, updatedAt: $updatedAt, syncRecords: $syncRecords)';
+  return 'TimetableSource(id: $id, userId: $userId, originalUrl: $originalUrl, finalUrl: $finalUrl, sourceType: $sourceType, importerKey: $importerKey, lastModified: $lastModified, lastSyncedAt: $lastSyncedAt, syncStatus: $syncStatus, errorMessage: $errorMessage, createdAt: $createdAt, updatedAt: $updatedAt, syncRecords: $syncRecords)';
 }
 
 
@@ -283,7 +281,7 @@ abstract mixin class _$TimetableSourceCopyWith<$Res> implements $TimetableSource
   factory _$TimetableSourceCopyWith(_TimetableSource value, $Res Function(_TimetableSource) _then) = __$TimetableSourceCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userId, String originalUrl, String? finalUrl, String sourceType, String? importerKey, String? etag, DateTime? lastModified, DateTime? lastSyncedAt, String syncStatus, String? errorMessage, DateTime createdAt, DateTime updatedAt, List<SyncRecord> syncRecords
+ String id, String userId, String originalUrl, String? finalUrl, String sourceType, String? importerKey, String? lastModified, DateTime? lastSyncedAt, String syncStatus, String? errorMessage, DateTime createdAt, DateTime updatedAt, List<SyncRecord> syncRecords
 });
 
 
@@ -300,7 +298,7 @@ class __$TimetableSourceCopyWithImpl<$Res>
 
 /// Create a copy of TimetableSource
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? originalUrl = null,Object? finalUrl = freezed,Object? sourceType = null,Object? importerKey = freezed,Object? etag = freezed,Object? lastModified = freezed,Object? lastSyncedAt = freezed,Object? syncStatus = null,Object? errorMessage = freezed,Object? createdAt = null,Object? updatedAt = null,Object? syncRecords = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? originalUrl = null,Object? finalUrl = freezed,Object? sourceType = null,Object? importerKey = freezed,Object? lastModified = freezed,Object? lastSyncedAt = freezed,Object? syncStatus = null,Object? errorMessage = freezed,Object? createdAt = null,Object? updatedAt = null,Object? syncRecords = null,}) {
   return _then(_TimetableSource(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -308,9 +306,8 @@ as String,originalUrl: null == originalUrl ? _self.originalUrl : originalUrl // 
 as String,finalUrl: freezed == finalUrl ? _self.finalUrl : finalUrl // ignore: cast_nullable_to_non_nullable
 as String?,sourceType: null == sourceType ? _self.sourceType : sourceType // ignore: cast_nullable_to_non_nullable
 as String,importerKey: freezed == importerKey ? _self.importerKey : importerKey // ignore: cast_nullable_to_non_nullable
-as String?,etag: freezed == etag ? _self.etag : etag // ignore: cast_nullable_to_non_nullable
 as String?,lastModified: freezed == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
-as DateTime?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
+as String?,lastSyncedAt: freezed == lastSyncedAt ? _self.lastSyncedAt : lastSyncedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
 as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable

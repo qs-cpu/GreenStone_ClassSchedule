@@ -31,7 +31,7 @@ class SourceDetailPage extends ConsumerWidget {
           IconButton(
             icon: syncState.isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.sync),
             onPressed: syncState.isLoading ? null : () {
-              ref.read(syncSourceProvider.notifier).syncSource(sourceId, ref);
+              ref.read(syncSourceProvider.notifier).syncSource(sourceId);
             },
             tooltip: '手动同步',
           ),

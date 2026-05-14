@@ -10,7 +10,7 @@ abstract class Course with _$Course {
     required String id,
     required String timetableId,
     required String title,
-    required String teacher,
+    String? teacher,
     String? color,
     String? remark,
     required DateTime createdAt,

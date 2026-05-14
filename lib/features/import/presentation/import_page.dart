@@ -13,6 +13,24 @@ class ImportPage extends ConsumerStatefulWidget {
 class _ImportPageState extends ConsumerState<ImportPage> {
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<void>>(importStateProvider, (_, state) {
+      state.whenOrNull(
+        error: (error, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.toString()), backgroundColor: Theme.of(context).colorScheme.error),
+          );
+        },
+        data: (_) {
+          if (!state.isLoading && !state.hasError) {
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('导入成功！'), backgroundColor: Colors.green),
+            );
+            context.pop(); // 返回上一页
+          }
+        },
+      );
+    });
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -54,24 +72,6 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
   @override
   Widget build(BuildContext context) {
     final importState = ref.watch(importStateProvider);
-
-    ref.listen<AsyncValue<void>>(importStateProvider, (_, state) {
-      state.whenOrNull(
-        error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.toString()), backgroundColor: Theme.of(context).colorScheme.error),
-          );
-        },
-        data: (_) {
-          if (!importState.isLoading && !importState.hasError) {
-             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('导入成功！'), backgroundColor: Colors.green),
-            );
-            context.pop(); // 返回上一页
-          }
-        },
-      );
-    });
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -191,7 +191,7 @@ class _UrlImportTabState extends ConsumerState<UrlImportTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Text(

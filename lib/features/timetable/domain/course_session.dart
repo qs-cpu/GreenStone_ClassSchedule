@@ -14,6 +14,7 @@ abstract class CourseSession with _$CourseSession {
     required int startWeek,
     required int endWeek,
     required String weekType, // "all", "odd", "even"
+    String? location,
     String? note,
     required DateTime createdAt,
     required DateTime updatedAt,

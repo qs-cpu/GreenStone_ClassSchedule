@@ -17,7 +17,6 @@ class AppTheme {
         primary: primaryColor,
         secondary: secondaryColor,
         surface: surfaceColor,
-        background: backgroundColor,
       ),
       appBarTheme: const AppBarTheme(
         centerTitle: true,

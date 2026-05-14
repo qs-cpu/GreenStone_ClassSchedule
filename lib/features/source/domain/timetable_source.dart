@@ -13,8 +13,7 @@ abstract class TimetableSource with _$TimetableSource {
     String? finalUrl,
     required String sourceType, // "ICS", "JSON", "HTML", "UNKNOWN"
     String? importerKey,
-    String? etag,
-    DateTime? lastModified,
+    String? lastModified,
     DateTime? lastSyncedAt,
     required String syncStatus, // "idle", "syncing", "success", "failed"
     String? errorMessage,

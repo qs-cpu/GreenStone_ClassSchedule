@@ -12,7 +12,9 @@ _SyncRecord _$SyncRecordFromJson(Map<String, dynamic> json) => _SyncRecord(
   status: json['status'] as String,
   message: json['message'] as String?,
   startedAt: DateTime.parse(json['startedAt'] as String),
-  finishedAt: DateTime.parse(json['finishedAt'] as String),
+  finishedAt: json['finishedAt'] == null
+      ? null
+      : DateTime.parse(json['finishedAt'] as String),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
@@ -24,7 +26,7 @@ Map<String, dynamic> _$SyncRecordToJson(_SyncRecord instance) =>
       'status': instance.status,
       'message': instance.message,
       'startedAt': instance.startedAt.toIso8601String(),
-      'finishedAt': instance.finishedAt.toIso8601String(),
+      'finishedAt': instance.finishedAt?.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

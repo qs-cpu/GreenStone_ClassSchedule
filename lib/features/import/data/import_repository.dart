@@ -4,7 +4,7 @@ import '../../../core/network/api_client.dart';
 import '../../timetable/domain/timetable.dart';
 
 final importRepositoryProvider = Provider<ImportRepository>((ref) {
-  return ImportRepository(ApiClient().dio);
+  return ImportRepository(ref.watch(dioProvider));
 });
 
 class ImportRepository {
@@ -13,15 +13,11 @@ class ImportRepository {
   ImportRepository(this._dio);
 
   Future<Timetable> importFromUrl(String url) async {
-    try {
-      final response = await _dio.post(
-        ApiEndpoints.importUrl,
-        data: {'url': url},
-      );
-      return Timetable.fromJson(response.data);
-    } catch (e) {
-      rethrow;
-    }
+    final response = await _dio.post(
+      ApiEndpoints.importUrl,
+      data: {'url': url},
+    );
+    return Timetable.fromJson(response.data);
   }
 
   Future<Map<String, dynamic>> importFromJwc({
@@ -31,20 +27,16 @@ class ImportRepository {
     required int year,
     required String semester,
   }) async {
-    try {
-      final response = await _dio.post(
-        ApiEndpoints.importJwc,
-        data: {
-          'school': school,
-          'username': username,
-          'password': password,
-          'year': year,
-          'semester': semester,
-        },
-      );
-      return response.data;
-    } catch (e) {
-      rethrow;
-    }
+    final response = await _dio.post(
+      ApiEndpoints.importJwc,
+      data: {
+        'school': school,
+        'username': username,
+        'password': password,
+        'year': year,
+        'semester': semester,
+      },
+    );
+    return response.data;
   }
 }

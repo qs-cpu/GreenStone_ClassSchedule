@@ -1,20 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../data/import_repository.dart';
+import '../../timetable/application/timetable_provider.dart';
 
 final importStateProvider = StateNotifierProvider<ImportNotifier, AsyncValue<void>>((ref) {
-  return ImportNotifier(ref.read(importRepositoryProvider));
+  return ImportNotifier(ref);
 });
 
 class ImportNotifier extends StateNotifier<AsyncValue<void>> {
-  final ImportRepository _repository;
+  final Ref _ref;
 
-  ImportNotifier(this._repository) : super(const AsyncData(null));
+  ImportNotifier(this._ref) : super(const AsyncData(null));
 
   Future<void> importFromUrl(String url) async {
     state = const AsyncLoading();
     try {
-      await _repository.importFromUrl(url);
+      final repository = _ref.read(importRepositoryProvider);
+      await repository.importFromUrl(url);
+      _ref.invalidate(timetablesProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       String errMsg = '导入失败';
@@ -34,13 +37,15 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     try {
-      await _repository.importFromJwc(
+      final repository = _ref.read(importRepositoryProvider);
+      await repository.importFromJwc(
         school: school,
         username: username,
         password: password,
         year: year,
         semester: semester,
       );
+      _ref.invalidate(timetablesProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       String errMsg = '教务系统登录失败或导入失败';

@@ -125,9 +125,12 @@ class TimetableHomePage extends ConsumerWidget {
   }
 
   Widget _buildWeekDaysHeader(bool isDayView) {
-    final todayIndex = DateTime.now().weekday - 1;
+    final now = DateTime.now();
+    final todayIndex = now.weekday - 1;
+    final monday = now.subtract(Duration(days: todayIndex));
+    
     final days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-    final dates = ['1', '2', '3', '4', '5', '6', '7']; // 临时数据
+    final dates = List.generate(7, (index) => monday.add(Duration(days: index)).day.toString());
 
     List<int> displayIndices = isDayView ? [todayIndex] : List.generate(7, (i) => i);
 
@@ -137,7 +140,7 @@ class TimetableHomePage extends ConsumerWidget {
         color: const Color(0xFFFFF5F8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             offset: const Offset(0, 2),
             blurRadius: 4,
           ),
@@ -209,7 +212,7 @@ class TimetableHomePage extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               border: Border(
-                left: BorderSide(color: Colors.grey.withOpacity(0.1)),
+                left: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
               ),
             ),
           ),
@@ -235,7 +238,7 @@ class TimetableHomePage extends ConsumerWidget {
           startPeriod: session.startSection,
           duration: session.endSection - session.startSection + 1,
           title: course.title,
-          room: session.note ?? '未知地点',
+          room: session.location ?? session.note ?? '未知地点',
           color: color,
         ));
       }
@@ -274,11 +277,11 @@ class TimetableHomePage extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.85),
+              color: color.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

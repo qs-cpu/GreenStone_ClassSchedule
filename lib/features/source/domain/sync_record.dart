@@ -11,7 +11,7 @@ abstract class SyncRecord with _$SyncRecord {
     required String status,
     String? message,
     required DateTime startedAt,
-    required DateTime finishedAt,
+    DateTime? finishedAt,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _SyncRecord;

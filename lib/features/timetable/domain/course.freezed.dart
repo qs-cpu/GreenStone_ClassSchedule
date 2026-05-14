@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Course {
 
- String get id; String get timetableId; String get title; String get teacher; String? get color; String? get remark; DateTime get createdAt; DateTime get updatedAt; List<CourseSession> get sessions;
+ String get id; String get timetableId; String get title; String? get teacher; String? get color; String? get remark; DateTime get createdAt; DateTime get updatedAt; List<CourseSession> get sessions;
 /// Create a copy of Course
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $CourseCopyWith<$Res>  {
   factory $CourseCopyWith(Course value, $Res Function(Course) _then) = _$CourseCopyWithImpl;
 @useResult
 $Res call({
- String id, String timetableId, String title, String teacher, String? color, String? remark, DateTime createdAt, DateTime updatedAt, List<CourseSession> sessions
+ String id, String timetableId, String title, String? teacher, String? color, String? remark, DateTime createdAt, DateTime updatedAt, List<CourseSession> sessions
 });
 
 
@@ -65,13 +65,13 @@ class _$CourseCopyWithImpl<$Res>
 
 /// Create a copy of Course
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timetableId = null,Object? title = null,Object? teacher = null,Object? color = freezed,Object? remark = freezed,Object? createdAt = null,Object? updatedAt = null,Object? sessions = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timetableId = null,Object? title = null,Object? teacher = freezed,Object? color = freezed,Object? remark = freezed,Object? createdAt = null,Object? updatedAt = null,Object? sessions = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timetableId: null == timetableId ? _self.timetableId : timetableId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,teacher: null == teacher ? _self.teacher : teacher // ignore: cast_nullable_to_non_nullable
-as String,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as String,teacher: freezed == teacher ? _self.teacher : teacher // ignore: cast_nullable_to_non_nullable
+as String?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as String?,remark: freezed == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -161,7 +161,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String timetableId,  String title,  String teacher,  String? color,  String? remark,  DateTime createdAt,  DateTime updatedAt,  List<CourseSession> sessions)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String timetableId,  String title,  String? teacher,  String? color,  String? remark,  DateTime createdAt,  DateTime updatedAt,  List<CourseSession> sessions)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Course() when $default != null:
 return $default(_that.id,_that.timetableId,_that.title,_that.teacher,_that.color,_that.remark,_that.createdAt,_that.updatedAt,_that.sessions);case _:
@@ -182,7 +182,7 @@ return $default(_that.id,_that.timetableId,_that.title,_that.teacher,_that.color
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String timetableId,  String title,  String teacher,  String? color,  String? remark,  DateTime createdAt,  DateTime updatedAt,  List<CourseSession> sessions)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String timetableId,  String title,  String? teacher,  String? color,  String? remark,  DateTime createdAt,  DateTime updatedAt,  List<CourseSession> sessions)  $default,) {final _that = this;
 switch (_that) {
 case _Course():
 return $default(_that.id,_that.timetableId,_that.title,_that.teacher,_that.color,_that.remark,_that.createdAt,_that.updatedAt,_that.sessions);case _:
@@ -202,7 +202,7 @@ return $default(_that.id,_that.timetableId,_that.title,_that.teacher,_that.color
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String timetableId,  String title,  String teacher,  String? color,  String? remark,  DateTime createdAt,  DateTime updatedAt,  List<CourseSession> sessions)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String timetableId,  String title,  String? teacher,  String? color,  String? remark,  DateTime createdAt,  DateTime updatedAt,  List<CourseSession> sessions)?  $default,) {final _that = this;
 switch (_that) {
 case _Course() when $default != null:
 return $default(_that.id,_that.timetableId,_that.title,_that.teacher,_that.color,_that.remark,_that.createdAt,_that.updatedAt,_that.sessions);case _:
@@ -217,13 +217,13 @@ return $default(_that.id,_that.timetableId,_that.title,_that.teacher,_that.color
 @JsonSerializable()
 
 class _Course implements Course {
-  const _Course({required this.id, required this.timetableId, required this.title, required this.teacher, this.color, this.remark, required this.createdAt, required this.updatedAt, final  List<CourseSession> sessions = const []}): _sessions = sessions;
+  const _Course({required this.id, required this.timetableId, required this.title, this.teacher, this.color, this.remark, required this.createdAt, required this.updatedAt, final  List<CourseSession> sessions = const []}): _sessions = sessions;
   factory _Course.fromJson(Map<String, dynamic> json) => _$CourseFromJson(json);
 
 @override final  String id;
 @override final  String timetableId;
 @override final  String title;
-@override final  String teacher;
+@override final  String? teacher;
 @override final  String? color;
 @override final  String? remark;
 @override final  DateTime createdAt;
@@ -269,7 +269,7 @@ abstract mixin class _$CourseCopyWith<$Res> implements $CourseCopyWith<$Res> {
   factory _$CourseCopyWith(_Course value, $Res Function(_Course) _then) = __$CourseCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String timetableId, String title, String teacher, String? color, String? remark, DateTime createdAt, DateTime updatedAt, List<CourseSession> sessions
+ String id, String timetableId, String title, String? teacher, String? color, String? remark, DateTime createdAt, DateTime updatedAt, List<CourseSession> sessions
 });
 
 
@@ -286,13 +286,13 @@ class __$CourseCopyWithImpl<$Res>
 
 /// Create a copy of Course
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timetableId = null,Object? title = null,Object? teacher = null,Object? color = freezed,Object? remark = freezed,Object? createdAt = null,Object? updatedAt = null,Object? sessions = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timetableId = null,Object? title = null,Object? teacher = freezed,Object? color = freezed,Object? remark = freezed,Object? createdAt = null,Object? updatedAt = null,Object? sessions = null,}) {
   return _then(_Course(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timetableId: null == timetableId ? _self.timetableId : timetableId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,teacher: null == teacher ? _self.teacher : teacher // ignore: cast_nullable_to_non_nullable
-as String,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as String,teacher: freezed == teacher ? _self.teacher : teacher // ignore: cast_nullable_to_non_nullable
+as String?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as String?,remark: freezed == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
