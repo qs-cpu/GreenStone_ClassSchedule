@@ -12,7 +12,7 @@ const app = new Elysia()
   .use(sourceRoutes)
   .use(importJwcRoutes)
   .get('/', () => 'GreenStone API')
-  .listen(3000)
+  .listen(3001)
 
 console.log(`Server running at ${app.server?.url}`)
 

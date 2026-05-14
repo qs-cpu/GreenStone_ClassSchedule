@@ -46,4 +46,13 @@ app.*.map.json
 /android/local.properties
 /flutter-env.ps1
 /dev-shell.local.ps1
+# AI 操作日志和 API 文档（本地开发用）
+AI操作日志.md
+API.md
+
+# Node modules
+node_modules/
+app/node_modules/
+
+# App data (Docker volume)
 app/data/

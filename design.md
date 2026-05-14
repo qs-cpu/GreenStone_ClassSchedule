@@ -782,3 +782,27 @@ GreenStone 课程表系统采用 Flutter 前端、Bun + Elysia + Drizzle 后端�
 - [junyilou/python-ical-timetable](https://github.com/junyilou/python-ical-timetable)
 - [diredocks/fdzc-ical-gen-cf-worker](https://github.com/diredocks/fdzc-ical-gen-cf-worker)
 
+---
+
+## 待办任务
+
+### 用户登录系统
+
+**优先级**：高
+
+**说明**：
+
+当前 `/api/import-jwc` 接口（教务系统课程表导入）需要前端传入 `userId` 和 `termId` 参数，这是因为课程表数据需要关联到具体用户和学期。
+
+后续需要实现用户登录系统，通过 JWT 认证机制：
+1. 用户登录后获取 token
+2. 前端请求携带 token
+3. 后端从 token 解析出当前用户 ID
+4. `/api/import-jwc` 接口自动使用当前用户 ID，无需前端显式传入
+
+**与课程表导入的关系**：
+
+- 导入课程表时，课程表数据归属需要明确绑定到某个用户
+- 当前临时方案：前端传入 `userId` 和 `termId`
+- 最终方案：实现用户认证后，从 token 自动获取用户身份
+

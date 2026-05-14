@@ -3,12 +3,15 @@ import { schools } from '../parsers/schools'
 import { db, schema } from '../db'
 
 export const importJwcRoutes = new Elysia()
+  .onRequest(() => console.log('[DEBUG] import-jwc route hit'))
   .group('/api/import-jwc', (app) =>
     app.post(
       '/',
       async ({ body, set }) => {
-        const { school, username, password, year, semester } = body as {
+        const { school, userId, termId, username, password, year, semester } = body as {
           school: string
+          userId: string
+          termId: string
           username: string
           password: string
           year: number
@@ -28,8 +31,8 @@ export const importJwcRoutes = new Elysia()
 
           const [timetable] = await db.insert(schema.timetables)
             .values({
-              userId: 'default-user',
-              termId: 'default-term',
+              userId,
+              termId,
               title: `${year}年${semester}学期课程表`,
             })
             .returning()
@@ -86,6 +89,8 @@ export const importJwcRoutes = new Elysia()
       {
         body: t.Object({
           school: t.String(),
+          userId: t.String(),
+          termId: t.String(),
           username: t.String(),
           password: t.String(),
           year: t.Number(),

@@ -45,13 +45,19 @@ export class FdzcFetcher {
       xn: year.toString(),
       xq: semester,
     })
+    console.log('[DEBUG] fetchTimetable response:', res.status, res.url)
 
     const html = await res.text()
+    console.log('[DEBUG] fetchTimetable html length:', html.length)
+    console.log('[DEBUG] fetchTimetable full html:', html)
+
     if (html.includes('出错提示')) {
       throw new Error('用户名或密码错误')
     }
 
-    return parseFullTable(html)
+    const courses = parseFullTable(html)
+    console.log('[DEBUG] parsed courses count:', courses.length)
+    return courses
   }
 
   async fetchBeginDate(year: number, semester: string): Promise<[number, number, number]> {
