@@ -4,7 +4,7 @@ part 'sync_record.freezed.dart';
 part 'sync_record.g.dart';
 
 @freezed
-class SyncRecord with _$SyncRecord {
+abstract class SyncRecord with _$SyncRecord {
   const factory SyncRecord({
     required String id,
     required String sourceId,

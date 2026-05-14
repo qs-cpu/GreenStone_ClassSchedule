@@ -5,7 +5,7 @@ part 'timetable.freezed.dart';
 part 'timetable.g.dart';
 
 @freezed
-class Timetable with _$Timetable {
+abstract class Timetable with _$Timetable {
   const factory Timetable({
     required String id,
     required String userId,

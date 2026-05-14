@@ -4,7 +4,7 @@ part 'course_session.freezed.dart';
 part 'course_session.g.dart';
 
 @freezed
-class CourseSession with _$CourseSession {
+abstract class CourseSession with _$CourseSession {
   const factory CourseSession({
     required String id,
     required String courseId,
