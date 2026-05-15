@@ -1,18 +1,41 @@
 import { Elysia, t } from 'elysia'
 import { schools } from '../parsers/schools'
 import { db, schema } from '../db'
-import { authMiddleware } from '../middleware/auth'
+import { AuthService } from '../services/auth.service'
 import { TermService } from '../services/term.service'
 
+const authService = new AuthService()
 const termService = new TermService()
 
 export const importJwcRoutes = new Elysia()
-  .use(authMiddleware)
-  .onRequest(() => console.log('[DEBUG] import-jwc route hit'))
   .group('/api/import-jwc', (app) =>
     app.post(
       '/',
-      async ({ body, set, user }: any) => {
+      async ({ body, set, request }: any) => {
+        console.log('[DEBUG] import-jwc route hit')
+        
+        const authHeader = request.headers.get('Authorization')
+        console.log('[DEBUG] authHeader:', authHeader)
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          set.status = 401
+          return { error: '未授权，请先登录' }
+        }
+
+        const token = authHeader.slice(7)
+        console.log('[DEBUG] token:', token)
+        
+        const payload = await authService.verifyToken(token)
+        console.log('[DEBUG] payload:', payload)
+        
+        if (!payload) {
+          set.status = 401
+          return { error: '无效的 token' }
+        }
+
+        const userId = payload.userId
+        console.log('[DEBUG] userId:', userId)
+
         const { school, username, password, year, semester } = body as {
           school: string
           username: string
@@ -20,8 +43,6 @@ export const importJwcRoutes = new Elysia()
           year: number
           semester: string
         }
-
-        const userId = user.userId
 
         const fetcher = schools[school]
         if (!fetcher) {
@@ -35,6 +56,7 @@ export const importJwcRoutes = new Elysia()
           const beginDate = await fetcher.fetchBeginDate(year, semester)
 
           const term = await termService.findOrCreateTerm(userId, year, semester)
+          console.log('[DEBUG] term:', term)
 
           const [timetable] = await db.insert(schema.timetables)
             .values({

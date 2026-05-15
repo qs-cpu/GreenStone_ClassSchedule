@@ -64,13 +64,25 @@ export class TimetableService {
   }
 
   async getDayView(id: string, date: Date): Promise<any[] | null> {
-    const timetable = await this.findOne(id)
+    const [timetable] = await db.select().from(schema.timetables)
+      .where(eq(schema.timetables.id, id))
+      .execute()
+
     if (!timetable) return null
 
-    const weekday = date.getDay() || 7
-    const weekNo = this.getWeekNumber(date)
+    const [term] = await db.select().from(schema.terms)
+      .where(eq(schema.terms.id, timetable.termId))
+      .execute()
 
-    const courses = timetable.courses.filter((c) =>
+    const startDate = term?.startDate || new Date('2024-08-26')
+
+    const weekday = date.getDay() || 7
+    const weekNo = this.getWeekNumber(date, startDate)
+
+    const coursesData = await this.findOne(id)
+    if (!coursesData) return null
+
+    const courses = coursesData.courses.filter((c) =>
       c.sessions.some(
         (s) => s.weekday === weekday && s.startWeek <= weekNo && s.endWeek >= weekNo
       )
@@ -79,9 +91,8 @@ export class TimetableService {
     return courses
   }
 
-  private getWeekNumber(date: Date): number {
-    const start = new Date('2024-01-01')
-    const diff = date.getTime() - start.getTime()
+  private getWeekNumber(date: Date, startDate: Date): number {
+    const diff = date.getTime() - startDate.getTime()
     return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1
   }
 }
