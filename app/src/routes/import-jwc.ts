@@ -1,22 +1,27 @@
 import { Elysia, t } from 'elysia'
 import { schools } from '../parsers/schools'
 import { db, schema } from '../db'
+import { authMiddleware } from '../middleware/auth'
+import { TermService } from '../services/term.service'
+
+const termService = new TermService()
 
 export const importJwcRoutes = new Elysia()
+  .use(authMiddleware)
   .onRequest(() => console.log('[DEBUG] import-jwc route hit'))
   .group('/api/import-jwc', (app) =>
     app.post(
       '/',
-      async ({ body, set }) => {
-        const { school, userId, termId, username, password, year, semester } = body as {
+      async ({ body, set, user }: any) => {
+        const { school, username, password, year, semester } = body as {
           school: string
-          userId: string
-          termId: string
           username: string
           password: string
           year: number
           semester: string
         }
+
+        const userId = user.userId
 
         const fetcher = schools[school]
         if (!fetcher) {
@@ -29,10 +34,12 @@ export const importJwcRoutes = new Elysia()
           const courses = await fetcher.fetchTimetable(year, semester)
           const beginDate = await fetcher.fetchBeginDate(year, semester)
 
+          const term = await termService.findOrCreateTerm(userId, year, semester)
+
           const [timetable] = await db.insert(schema.timetables)
             .values({
               userId,
-              termId,
+              termId: term.id,
               title: `${year}年${semester}学期课程表`,
             })
             .returning()
@@ -89,8 +96,6 @@ export const importJwcRoutes = new Elysia()
       {
         body: t.Object({
           school: t.String(),
-          userId: t.String(),
-          termId: t.String(),
           username: t.String(),
           password: t.String(),
           year: t.Number(),

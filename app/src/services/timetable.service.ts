@@ -1,32 +1,45 @@
 import { db, schema } from '../db'
 import { eq } from 'drizzle-orm'
+import { toTimetableDTO, toTimetableListDTO, TimetableDTO, TimetableListDTO } from '../dto/timetable.dto'
 
 export class TimetableService {
-  async findAll() {
-    return db.select().from(schema.timetables).execute()
+  async findAll(): Promise<TimetableListDTO[]> {
+    const timetables = await db.select().from(schema.timetables).execute()
+    return toTimetableListDTO(timetables)
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<TimetableDTO | null> {
     const timetable = await db.select().from(schema.timetables)
       .where(eq(schema.timetables.id, id))
       .execute()
+
+    if (!timetable[0]) return null
 
     const courses = await db.select().from(schema.courses)
       .where(eq(schema.courses.timetableId, id))
       .execute()
 
-    const coursesWithSessions = await Promise.all(
-      courses.map(async (course) => {
-        const sessions = await db.select().from(schema.courseSessions)
-          .where(eq(schema.courseSessions.courseId, course.id))
-        return { ...course, sessions }
-      })
-    )
+    const sessionsMap = new Map<string, any[]>()
+    const locationsMap = new Map<string, any[]>()
 
-    return { ...timetable[0], courses: coursesWithSessions }
+    for (const course of courses) {
+      const sessions = await db.select().from(schema.courseSessions)
+        .where(eq(schema.courseSessions.courseId, course.id))
+        .execute()
+      sessionsMap.set(course.id, sessions)
+
+      for (const session of sessions) {
+        const locations = await db.select().from(schema.locations)
+          .where(eq(schema.locations.sessionId, session.id))
+          .execute()
+        locationsMap.set(session.id, locations)
+      }
+    }
+
+    return toTimetableDTO(timetable[0], courses, sessionsMap, locationsMap)
   }
 
-  async getWeekView(id: string, weekNo: number) {
+  async getWeekView(id: string, weekNo: number): Promise<Record<number, any[]> | null> {
     const timetable = await this.findOne(id)
     if (!timetable) return null
 
@@ -34,7 +47,7 @@ export class TimetableService {
       c.sessions.some((s) => s.startWeek <= weekNo && s.endWeek >= weekNo)
     )
 
-    const weekData: Record<number, typeof courses> = {}
+    const weekData: Record<number, any[]> = {}
     for (const course of courses) {
       for (const session of course.sessions) {
         if (session.weekType && session.weekType !== 'all') {
@@ -50,7 +63,7 @@ export class TimetableService {
     return weekData
   }
 
-  async getDayView(id: string, date: Date) {
+  async getDayView(id: string, date: Date): Promise<any[] | null> {
     const timetable = await this.findOne(id)
     if (!timetable) return null
 
