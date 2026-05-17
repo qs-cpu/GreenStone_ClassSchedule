@@ -66,12 +66,23 @@ export const importJwcRoutes = new Elysia()
             })
             .returning()
 
+          const courseIndexMap = new Map<string, string>()
+          let currentIndex = 1
+
           for (const c of courses) {
+            if (!courseIndexMap.has(c.title)) {
+              courseIndexMap.set(c.title, currentIndex.toString())
+              currentIndex++
+            }
+
+            const color = courseIndexMap.get(c.title)
+
             const [course] = await db.insert(schema.courses)
               .values({
                 timetableId: timetable.id,
                 title: c.title,
                 teacher: c.teacher,
+                color,
               })
               .returning()
 

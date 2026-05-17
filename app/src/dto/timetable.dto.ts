@@ -9,7 +9,6 @@ export interface CourseDTO {
   title: string
   teacher: string | null
   color: string | null
-  remark: string | null
   sessions: SessionDTO[]
 }
 
@@ -21,7 +20,6 @@ export interface SessionDTO {
   startWeek: number
   endWeek: number
   weekType: string
-  note: string | null
   location: string | null
 }
 
@@ -54,7 +52,6 @@ export function toCourseDTO(
     title: course.title,
     teacher: course.teacher,
     color: course.color,
-    remark: course.remark,
     sessions: sessions.map(session => toSessionDTO(session, locationsMap)),
   }
 }
@@ -70,7 +67,6 @@ export function toSessionDTO(session: any, locationsMap: Map<string, any[]>): Se
     startWeek: session.startWeek,
     endWeek: session.endWeek,
     weekType: session.weekType,
-    note: session.note,
     location: locationText,
   }
 }

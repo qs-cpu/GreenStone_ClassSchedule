@@ -43,20 +43,24 @@ export class TimetableService {
     const timetable = await this.findOne(id)
     if (!timetable) return null
 
-    const courses = timetable.courses.filter((c) =>
-      c.sessions.some((s) => s.startWeek <= weekNo && s.endWeek >= weekNo)
-    )
-
     const weekData: Record<number, any[]> = {}
-    for (const course of courses) {
+
+    for (const course of timetable.courses) {
       for (const session of course.sessions) {
+        if (session.startWeek > weekNo || session.endWeek < weekNo) continue
+        
         if (session.weekType && session.weekType !== 'all') {
           if (session.weekType === 'odd' && weekNo % 2 === 0) continue
           if (session.weekType === 'even' && weekNo % 2 === 1) continue
         }
+
         const weekday = session.weekday
         if (!weekData[weekday]) weekData[weekday] = []
-        weekData[weekday].push(course)
+
+        const existingCourse = weekData[weekday].find((c: any) => c.id === course.id)
+        if (!existingCourse) {
+          weekData[weekday].push(course)
+        }
       }
     }
 
@@ -82,13 +86,28 @@ export class TimetableService {
     const coursesData = await this.findOne(id)
     if (!coursesData) return null
 
-    const courses = coursesData.courses.filter((c) =>
-      c.sessions.some(
-        (s) => s.weekday === weekday && s.startWeek <= weekNo && s.endWeek >= weekNo
-      )
-    )
+    const result = []
 
-    return courses
+    for (const course of coursesData.courses) {
+      const matchingSessions = course.sessions.filter(
+        (s) => s.weekday === weekday && s.startWeek <= weekNo && s.endWeek >= weekNo &&
+        (s.weekType === 'all' || 
+         (s.weekType === 'odd' && weekNo % 2 === 1) ||
+         (s.weekType === 'even' && weekNo % 2 === 0))
+      )
+
+      if (matchingSessions.length > 0) {
+        result.push({
+          id: course.id,
+          title: course.title,
+          teacher: course.teacher,
+          color: course.color,
+          sessions: matchingSessions,
+        })
+      }
+    }
+
+    return result
   }
 
   private getWeekNumber(date: Date, startDate: Date): number {
