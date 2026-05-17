@@ -24,7 +24,8 @@ export class FdzcFetcher {
     console.log('[DEBUG] ValidateCookie.asp:', res2.status, res2.url)
     const arrayBuffer = await res2.arrayBuffer()
     const uint8Array = new Uint8Array(arrayBuffer)
-    const captchaImage = Buffer.from(uint8Array).toString('base64')
+    const base64 = Buffer.from(uint8Array).toString('base64')
+    const captchaImage = `data:image/bmp;base64,${base64}`
     console.log('[DEBUG] captchaImage length:', captchaImage.length)
 
     const cookies = this.client.getAllCookies()
