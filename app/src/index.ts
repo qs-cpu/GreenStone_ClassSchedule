@@ -4,9 +4,11 @@ import { timetableRoutes } from './routes/timetable'
 import { importRoutes } from './routes/import'
 import { sourceRoutes } from './routes/source'
 import { importJwcRoutes } from './routes/import-jwc'
+import { authRoutes } from './routes/auth'
 
 const app = new Elysia()
   .use(cors())
+  .use(authRoutes)
   .use(timetableRoutes)
   .use(importRoutes)
   .use(sourceRoutes)
