@@ -27,6 +27,20 @@ export class HttpClient {
     this.cookies.set(key, value)
   }
 
+  getAllCookies(): Record<string, string> {
+    const result: Record<string, string> = {}
+    for (const [key, value] of this.cookies.entries()) {
+      result[key] = value
+    }
+    return result
+  }
+
+  setAllCookies(cookies: Record<string, string>): void {
+    for (const [key, value] of Object.entries(cookies)) {
+      this.cookies.set(key, value)
+    }
+  }
+
   async request(method: string, path: string, options: Record<string, any> = {}): Promise<Response> {
     const url = path.startsWith('http') ? path : this.baseUrl + path
     const headers: Record<string, string> = {

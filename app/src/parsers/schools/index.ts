@@ -4,7 +4,18 @@ import { ParsedCourse } from '../importers/importer.interface'
 export interface SchoolFetcher {
   id: string
   name: string
-  login(username: string, password: string): Promise<void>
+  initLogin(): Promise<{
+    loginURL: string
+    captchaImage: string
+    cookies: Record<string, string>
+  }>
+  completeLogin(
+    loginURL: string,
+    captcha: string,
+    cookies: Record<string, string>,
+    username: string,
+    password: string
+  ): Promise<void>
   fetchTimetable(year: number, semester: string): Promise<ParsedCourse[]>
   fetchBeginDate(year: number, semester: string): Promise<[number, number, number]>
 }
