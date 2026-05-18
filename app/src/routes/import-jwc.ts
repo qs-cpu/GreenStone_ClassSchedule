@@ -1,207 +1,221 @@
 import { Elysia, t } from 'elysia'
 import { schools } from '../parsers/schools'
+import { FdzcFetcher } from '../parsers/schools/fdzc.fetcher'
 import { db, schema } from '../db'
-import { AuthService } from '../services/auth.service'
-import { TermService } from '../services/term.service'
-import { redis } from '../lib/redis'
+import { Buffer } from 'node:buffer'
 
-const authService = new AuthService()
-const termService = new TermService()
+const CAPTCHA_TTL_MS = 5 * 60 * 1000
+const captchaSessions = new Map<string, { fetcher: FdzcFetcher; createdAt: number }>()
 
-function generateCaptchaId(): string {
-  return crypto.randomUUID()
+function normalizeSemester(semester: string) {
+  if (semester === '1' || semester === '上') return '上'
+  if (semester === '2' || semester === '下') return '下'
+  return semester
+}
+
+function cleanupCaptchaSessions() {
+  const now = Date.now()
+  for (const [id, session] of captchaSessions) {
+    if (now - session.createdAt > CAPTCHA_TTL_MS) {
+      captchaSessions.delete(id)
+    }
+  }
+}
+
+function createSchoolFetcher(school: string) {
+  if (school === 'fdzc') {
+    return new FdzcFetcher()
+  }
+  return null
+}
+
+async function resolveImportOwner(userId: string | undefined, termId: string | undefined, year: number, semester: string) {
+  if (userId && termId) {
+    return { userId, termId }
+  }
+
+  const username = 'default-import-user'
+  let user = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.username, username),
+  })
+
+  if (!user) {
+    ;[user] = await db.insert(schema.users)
+      .values({
+        username,
+        nickname: '默认导入用户',
+      })
+      .returning()
+  }
+
+  const normalizedSemester = normalizeSemester(semester)
+  const termName = `${year}年${normalizedSemester}`
+  const existingTerms = await db.select().from(schema.terms)
+  let term = existingTerms.find((item) => item.userId === user.id && item.name === termName)
+
+  if (!term) {
+    const startDate = normalizedSemester === '上' ? new Date(`${year}-09-01`) : new Date(`${year}-02-20`)
+    const endDate = normalizedSemester === '上' ? new Date(`${year + 1}-01-20`) : new Date(`${year}-07-10`)
+    ;[term] = await db.insert(schema.terms)
+      .values({
+        userId: user.id,
+        name: termName,
+        startDate,
+        endDate,
+      })
+      .returning()
+  }
+
+  return { userId: user.id, termId: term.id }
 }
 
 export const importJwcRoutes = new Elysia()
+  .onRequest(() => console.log('[DEBUG] import-jwc route hit'))
   .group('/api/import-jwc', (app) =>
-    app
-      .get(
-        '/captcha',
-        async ({ query, set }: any) => {
-          console.log('[DEBUG] captcha route hit')
+    app.get(
+      '/captcha',
+      async ({ query, set }) => {
+        cleanupCaptchaSessions()
 
-          const { school } = query as { school: string }
-          console.log('[DEBUG] school:', school)
-
-          const fetcher = schools[school]
-          if (!fetcher) {
-            set.status = 400
-            return { error: `不支持的学校: ${school}` }
-          }
-
-          try {
-            const result = await fetcher.initLogin()
-            const captchaId = generateCaptchaId()
-
-            const sessionData = {
-              loginURL: result.loginURL,
-              cookies: result.cookies,
-            }
-
-            await redis.setex(`captcha:${captchaId}`, 300, JSON.stringify(sessionData))
-            console.log('[DEBUG] captchaId:', captchaId)
-
-            return {
-              captchaId,
-              captchaImage: result.captchaImage,
-            }
-          } catch (error) {
-            set.status = 500
-            const message = error instanceof Error ? error.message : String(error)
-            return { error: message }
-          }
-        },
-        {
-          query: t.Object({
-            school: t.String(),
-          }),
+        const school = query.school
+        const fetcher = createSchoolFetcher(school)
+        if (!fetcher) {
+          set.status = 400
+          return { error: `Unsupported school: ${school}` }
         }
-      )
-      .post(
-        '/',
-        async ({ body, set, request }: any) => {
-          console.log('[DEBUG] import-jwc route hit')
 
-          const authHeader = request.headers.get('Authorization')
-          console.log('[DEBUG] authHeader:', authHeader)
-
-          if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            set.status = 401
-            return { error: '未授权，请先登录' }
+        try {
+          const image = await fetcher.fetchCaptcha()
+          const captchaId = crypto.randomUUID()
+          captchaSessions.set(captchaId, { fetcher, createdAt: Date.now() })
+          return {
+            captchaId,
+            captchaImage: `data:image/bmp;base64,${Buffer.from(image).toString('base64')}`,
           }
+        } catch (error) {
+          set.status = 500
+          const message = error instanceof Error ? error.message : String(error)
+          return { error: message }
+        }
+      },
+      {
+        query: t.Object({
+          school: t.String(),
+        }),
+      }
+    )
+    .post(
+      '/',
+      async ({ body, set }) => {
+        const { school, username, password, year, semester, userId, termId, captchaId, captcha } = body as {
+          school: string
+          username: string
+          password: string
+          year: number
+          semester: string
+          userId?: string
+          termId?: string
+          captchaId?: string
+          captcha?: string
+        }
 
-          const token = authHeader.slice(7)
-          console.log('[DEBUG] token:', token)
+        const fetcher = schools[school]
+        if (!fetcher) {
+          set.status = 400
+          return { error: `Unsupported school: ${school}` }
+        }
 
-          const payload = await authService.verifyToken(token)
-          console.log('[DEBUG] payload:', payload)
+        try {
+          let activeFetcher = fetcher
+          const normalizedSemester = normalizeSemester(semester)
 
-          if (!payload) {
-            set.status = 401
-            return { error: '无效的 token' }
-          }
-
-          const userId = payload.userId
-          console.log('[DEBUG] userId:', userId)
-
-          const { school, username, password, year, semester, captchaId, captcha } = body as {
-            school: string
-            username: string
-            password: string
-            year: number
-            semester: string
-            captchaId: string
-            captcha: string
-          }
-
-          const fetcher = schools[school]
-          if (!fetcher) {
-            set.status = 400
-            return { error: `不支持的学校: ${school}` }
-          }
-
-          try {
-            const sessionDataRaw = await redis.get(`captcha:${captchaId}`)
-            if (!sessionDataRaw) {
+          if (captchaId && captcha) {
+            const session = captchaSessions.get(captchaId)
+            if (!session) {
               set.status = 400
-              return { error: '验证码已过期，请重新获取' }
+              return { error: '验证码已过期，请刷新验证码后重试' }
             }
 
-            const sessionData = JSON.parse(sessionDataRaw)
-            await redis.del(`captcha:${captchaId}`)
+            activeFetcher = session.fetcher
+            await session.fetcher.loginWithCaptcha(username, password, captcha)
+            captchaSessions.delete(captchaId)
+          } else {
+            await fetcher.login(username, password)
+          }
 
-            await fetcher.completeLogin(
-              sessionData.loginURL,
-              captcha,
-              sessionData.cookies,
-              username,
-              password
-            )
+          const courses = await activeFetcher.fetchTimetable(year, normalizedSemester)
+          const beginDate = await activeFetcher.fetchBeginDate(year, normalizedSemester)
+          const owner = await resolveImportOwner(userId, termId, year, normalizedSemester)
 
-            const courses = await fetcher.fetchTimetable(year, semester)
-            const beginDate = await fetcher.fetchBeginDate(year, semester)
+          const [timetable] = await db.insert(schema.timetables)
+            .values({
+              userId: owner.userId,
+              termId: owner.termId,
+              title: `${year}年${normalizedSemester}课程表`,
+            })
+            .returning()
 
-            const term = await termService.findOrCreateTerm(userId, year, semester)
-            console.log('[DEBUG] term:', term)
-
-            const [timetable] = await db.insert(schema.timetables)
+          for (const c of courses) {
+            const [course] = await db.insert(schema.courses)
               .values({
-                userId,
-                termId: term.id,
-                title: `${year}年${semester}学期课程表`,
+                timetableId: timetable.id,
+                title: c.title,
+                teacher: c.teacher,
               })
               .returning()
 
-            const courseIndexMap = new Map<string, string>()
-            let currentIndex = 1
+            for (const s of c.sessions) {
+              const weekType = ['all', 'odd', 'even'].includes(s.weekType ?? '')
+                ? s.weekType as 'all' | 'odd' | 'even'
+                : 'all'
 
-            for (const c of courses) {
-              if (!courseIndexMap.has(c.title)) {
-                courseIndexMap.set(c.title, currentIndex.toString())
-                currentIndex++
-              }
-
-              const color = courseIndexMap.get(c.title)
-
-              const [course] = await db.insert(schema.courses)
+              const [session] = await db.insert(schema.courseSessions)
                 .values({
-                  timetableId: timetable.id,
-                  title: c.title,
-                  teacher: c.teacher,
-                  color,
+                  courseId: course.id,
+                  weekday: s.weekday,
+                  startSection: s.startSection,
+                  endSection: s.endSection,
+                  startWeek: s.startWeek,
+                  endWeek: s.endWeek,
+                  weekType,
                 })
                 .returning()
 
-              for (const s of c.sessions) {
-                const weekType = ['all', 'odd', 'even'].includes(s.weekType ?? '')
-                  ? s.weekType as 'all' | 'odd' | 'even'
-                  : 'all'
-
-                const [session] = await db.insert(schema.courseSessions)
+              if (s.location) {
+                await db.insert(schema.locations)
                   .values({
-                    courseId: course.id,
-                    weekday: s.weekday,
-                    startSection: s.startSection,
-                    endSection: s.endSection,
-                    startWeek: s.startWeek,
-                    endWeek: s.endWeek,
-                    weekType,
+                    sessionId: session.id,
+                    locationText: s.location,
                   })
-                  .returning()
-
-                if (s.location) {
-                  await db.insert(schema.locations)
-                    .values({
-                      sessionId: session.id,
-                      locationText: s.location,
-                    })
-                    .execute()
-                }
+                  .execute()
               }
             }
-
-            set.status = 201
-            return {
-              timetable,
-              coursesCount: courses.length,
-              beginDate,
-            }
-          } catch (error) {
-            set.status = 500
-            const message = error instanceof Error ? error.message : String(error)
-            return { error: message }
           }
-        },
-        {
-          body: t.Object({
-            school: t.String(),
-            username: t.String(),
-            password: t.String(),
-            year: t.Number(),
-            semester: t.String(),
-            captchaId: t.String(),
-            captcha: t.String(),
-          }),
+
+          set.status = 201
+          return {
+            timetable,
+            coursesCount: courses.length,
+            beginDate,
+          }
+        } catch (error) {
+          set.status = 500
+          const message = error instanceof Error ? error.message : String(error)
+          return { error: message }
         }
-      )
+      },
+      {
+        body: t.Object({
+          school: t.String(),
+          userId: t.Optional(t.String()),
+          termId: t.Optional(t.String()),
+          username: t.String(),
+          password: t.String(),
+          year: t.Number(),
+          semester: t.String(),
+          captchaId: t.Optional(t.String()),
+          captcha: t.Optional(t.String()),
+        }),
+      }
+    )
   )

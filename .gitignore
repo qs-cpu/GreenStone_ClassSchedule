@@ -57,6 +57,6 @@ app/node_modules/
 # App data (Docker volume)
 app/data/
 
-# 开发文档和测试文件
-backend-guide.md
-hoppscotch-collection.json
+
+# doc
+/doc

@@ -20,7 +20,8 @@ final currentTimetableDetailProvider = FutureProvider<Timetable?>((ref) async {
     // 如果没有选中，尝试拉取列表里的第一个作为默认
     final list = await ref.watch(timetablesProvider.future);
     if (list.isNotEmpty) {
-      return await repo.getTimetableDetail(list.first.id);
+      final sortedList = [...list]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return await repo.getTimetableDetail(sortedList.first.id);
     }
     return null; // 用户没有任何课表
   } else {

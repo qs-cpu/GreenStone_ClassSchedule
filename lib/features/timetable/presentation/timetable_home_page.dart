@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../application/timetable_provider.dart';
+import '../domain/course.dart';
 import '../domain/timetable.dart';
 
 // 用于控制日视图与周视图的切换
@@ -22,6 +23,7 @@ class TimetableHomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(currentTimetableDetailProvider);
+    final timetablesAsync = ref.watch(timetablesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -31,19 +33,76 @@ class TimetableHomePage extends ConsumerWidget {
           error: (_, __) => const Text('加载失败'),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.source),
-            tooltip: '数据来源管理',
-            onPressed: () {
-              context.push('/sources');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: '设置',
-            onPressed: () {
-              // TODO: 跳转到设置页
-            },
+          timetablesAsync.when(
+            data: (timetables) => PopupMenuButton<String>(
+              icon: const Icon(Icons.calendar_month),
+              tooltip: '切换课表',
+              enabled: timetables.isNotEmpty,
+              onSelected: (id) {
+                ref.read(selectedTimetableIdProvider.notifier).state = id;
+                ref.invalidate(currentTimetableDetailProvider);
+              },
+              itemBuilder: (context) {
+                final selectedId = ref.read(selectedTimetableIdProvider);
+                final sortedTimetables = [...timetables]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+                return sortedTimetables.map((timetable) {
+                  final isSelected = selectedId == timetable.id ||
+                      (selectedId == null && timetable.id == sortedTimetables.first.id);
+                  final createdAt = timetable.createdAt;
+                  final importedAt =
+                      '${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} '
+                      '${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+
+                  return PopupMenuItem<String>(
+                    value: timetable.id,
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                          size: 18,
+                          color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                timetable.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                importedAt,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+            loading: () => const SizedBox(
+              width: 48,
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+            error: (_, __) => IconButton(
+              icon: const Icon(Icons.calendar_month),
+              tooltip: '课表列表加载失败',
+              onPressed: () => ref.invalidate(timetablesProvider),
+            ),
           ),
         ],
       ),
@@ -91,6 +150,8 @@ class TimetableHomePage extends ConsumerWidget {
 
   Widget _buildTimetableView(BuildContext context, WidgetRef ref, Timetable timetable) {
     final isDayView = ref.watch(isDayViewProvider);
+    final unscheduledCourses = timetable.courses.where((course) => course.sessions.isEmpty).toList();
+    final hasScheduledCourses = timetable.courses.any((course) => course.sessions.isNotEmpty);
 
     return Column(
       children: [
@@ -108,19 +169,90 @@ class TimetableHomePage extends ConsumerWidget {
             },
           ),
         ),
-        _buildWeekDaysHeader(isDayView),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTimeColumn(),
-                Expanded(child: _buildClassesGrid(context, timetable, isDayView)),
-              ],
+        if (!hasScheduledCourses && unscheduledCourses.isNotEmpty)
+          Expanded(
+            child: SingleChildScrollView(
+              child: _buildUnscheduledCourses(context, unscheduledCourses),
+            ),
+          )
+        else ...[
+          _buildWeekDaysHeader(isDayView),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTimeColumn(),
+                      Expanded(child: _buildClassesGrid(context, timetable, isDayView)),
+                    ],
+                  ),
+                  if (unscheduledCourses.isNotEmpty)
+                    _buildUnscheduledCourses(context, unscheduledCourses),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildUnscheduledCourses(BuildContext context, List<Course> courses) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '未安排具体节次的课程',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          ...courses.map((course) {
+            final teacher = course.teacher;
+            return Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.event_note, color: colorScheme.primary, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          course.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (teacher != null && teacher.isNotEmpty)
+                          Text(
+                            teacher,
+                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -205,57 +337,64 @@ class TimetableHomePage extends ConsumerWidget {
   Widget _buildClassesGrid(BuildContext context, Timetable timetable, bool isDayView) {
     final todayIndex = DateTime.now().weekday - 1;
     final numCols = isDayView ? 1 : 7;
-
-    List<Widget> children = [
-      Row(
-        children: List.generate(numCols, (index) => Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
-              ),
-            ),
-          ),
-        )),
-      ),
-    ];
-
-    for (var course in timetable.courses) {
-      final color = _candyColors[course.id.hashCode.abs() % _candyColors.length];
-      
-      for (var session in course.sessions) {
-        final sessionDayIndex = session.weekday - 1;
-        
-        // 如果是日视图，只显示今天的课程
-        if (isDayView && sessionDayIndex != todayIndex) continue;
-        
-        final displayDayIndex = isDayView ? 0 : sessionDayIndex;
-
-        children.add(_buildClassCard(
-          context: context,
-          dayIndex: displayDayIndex,
-          numCols: numCols,
-          startPeriod: session.startSection,
-          duration: session.endSection - session.startSection + 1,
-          title: course.title,
-          room: session.location ?? session.note ?? '未知地点',
-          color: color,
-        ));
-      }
-    }
+    final hasScheduledCourses = timetable.courses.any((course) => course.sessions.isNotEmpty);
 
     return SizedBox(
-      height: 60 * 12.0,
-      child: Stack(
-        children: children,
+      height: hasScheduledCourses ? 60 * 12.0 : 60 * 4.0,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final colWidth = constraints.maxWidth / numCols;
+          final children = <Widget>[
+            Positioned.fill(
+              child: Row(
+                children: List.generate(numCols, (index) => Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+                      ),
+                    ),
+                  ),
+                )),
+              ),
+            ),
+          ];
+
+          for (var course in timetable.courses) {
+            final color = _candyColors[course.id.hashCode.abs() % _candyColors.length];
+
+            for (var session in course.sessions) {
+              final sessionDayIndex = session.weekday - 1;
+
+              if (sessionDayIndex < 0 || sessionDayIndex >= 7) continue;
+              // 如果是日视图，只显示今天的课程
+              if (isDayView && sessionDayIndex != todayIndex) continue;
+
+              final startPeriod = session.startSection.clamp(1, 12);
+              final endPeriod = session.endSection.clamp(startPeriod, 12);
+              final displayDayIndex = isDayView ? 0 : sessionDayIndex;
+
+              children.add(_buildClassCard(
+                colWidth: colWidth,
+                dayIndex: displayDayIndex,
+                startPeriod: startPeriod,
+                duration: endPeriod - startPeriod + 1,
+                title: course.title,
+                room: session.location ?? session.note ?? '地点未公布',
+                color: color,
+              ));
+            }
+          }
+
+          return Stack(children: children);
+        },
       ),
     );
   }
 
   Widget _buildClassCard({
-    required BuildContext context,
+    required double colWidth,
     required int dayIndex,
-    required int numCols,
     required int startPeriod,
     required int duration,
     required String title,
@@ -265,60 +404,54 @@ class TimetableHomePage extends ConsumerWidget {
     final double height = duration * 60.0 - 4;
     final double top = (startPeriod - 1) * 60.0 + 2;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final colWidth = constraints.maxWidth / numCols;
-        
-        return Positioned(
-          left: colWidth * dayIndex + 2,
-          top: top,
-          width: colWidth - 4,
-          height: height,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.4),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    return Positioned(
+      left: colWidth * dayIndex + 2,
+      top: top,
+      width: colWidth - 4,
+      height: height,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.4),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                const Icon(Icons.location_on, size: 10, color: Colors.black54),
+                Expanded(
+                  child: Text(
+                    room,
+                    style: const TextStyle(fontSize: 10, color: Colors.black54),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 10, color: Colors.black54),
-                    Expanded(
-                      child: Text(
-                        room,
-                        style: const TextStyle(fontSize: 10, color: Colors.black54),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
-          ),
-        );
-      }
+          ],
+        ),
+      ),
     );
   }
 }

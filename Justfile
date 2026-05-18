@@ -55,7 +55,7 @@ db-start:
     -e POSTGRES_PASSWORD=password \
     -e POSTGRES_DB=greenstone \
     -p 5432:5432 \
-    -v $(pwd)/app/data:/var/lib/postgresql/data \
+    -v greenstone-postgres-data:/var/lib/postgresql/data \
     postgres:14
 
 # 停止数据库
@@ -64,7 +64,7 @@ db-stop:
 
 # 数据库迁移
 db-migrate:
-  cd app && DATABASE_URL="postgresql://postgres:password@localhost:5432/greenstone" bunx drizzle-kit push
+  cd app && DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/greenstone" bun run drizzle-kit push --config drizzle.config.ts
 
 # 数据库 Shell
 db-shell:
@@ -86,4 +86,3 @@ start:
   just db-start
   just redis-start
   cd app && bun run dev
-
