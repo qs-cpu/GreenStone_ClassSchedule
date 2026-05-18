@@ -56,3 +56,7 @@ app/node_modules/
 
 # App data (Docker volume)
 app/data/
+
+
+# doc
+/doc
