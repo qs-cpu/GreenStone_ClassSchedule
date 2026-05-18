@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/import_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:convert';
 
 class ImportPage extends ConsumerStatefulWidget {
   const ImportPage({super.key});
@@ -63,15 +64,25 @@ class JwcImportTab extends ConsumerStatefulWidget {
 
 class _JwcImportTabState extends ConsumerState<JwcImportTab> {
   final _formKey = GlobalKey<FormState>();
-  String _school = 'fdzc'; // 默认福州大学至诚学院
+  String _school = 'fdzc';
   String _username = '';
   String _password = '';
   int _year = DateTime.now().year;
-  String _semester = '1';
+  String _semester = '上';
+  String _captcha = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(captchaProvider.notifier).fetchCaptcha(_school);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final importState = ref.watch(importStateProvider);
+    final captchaState = ref.watch(captchaProvider);
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -89,7 +100,10 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                 DropdownMenuItem(value: 'fdzc', child: Text('福州大学至诚学院')),
               ],
               onChanged: (val) {
-                if (val != null) setState(() => _school = val);
+                if (val != null) {
+                  setState(() => _school = val);
+                  ref.read(captchaProvider.notifier).fetchCaptcha(_school);
+                }
               },
             ),
             const SizedBox(height: 16),
@@ -122,8 +136,8 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                     value: _semester,
                     decoration: const InputDecoration(labelText: '学期', border: OutlineInputBorder()),
                     items: const [
-                      DropdownMenuItem(value: '1', child: Text('第一学期')),
-                      DropdownMenuItem(value: '2', child: Text('第二学期')),
+                      DropdownMenuItem(value: '上', child: Text('上学期')),
+                      DropdownMenuItem(value: '下', child: Text('下学期')),
                     ],
                     onChanged: (val) {
                       if (val != null) setState(() => _semester = val);
@@ -132,9 +146,40 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    decoration: const InputDecoration(labelText: '验证码', border: OutlineInputBorder()),
+                    validator: (val) => (val == null || val.isEmpty) ? '请输入验证码' : null,
+                    onSaved: (val) => _captcha = val!,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                InkWell(
+                  onTap: () => ref.read(captchaProvider.notifier).fetchCaptcha(_school),
+                  child: Container(
+                    height: 56,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: captchaState.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : captchaState.captchaImage != null
+                            ? _buildBase64Image(captchaState.captchaImage!)
+                            : const Center(child: Text('获取失败，点击重试', style: TextStyle(fontSize: 12))),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 32),
             FilledButton(
-              onPressed: importState.isLoading
+              onPressed: importState.isLoading || captchaState.captchaId == null
                   ? null
                   : () {
                       if (_formKey.currentState!.validate()) {
@@ -145,6 +190,8 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                               password: _password,
                               year: _year,
                               semester: _semester,
+                              captchaId: captchaState.captchaId!,
+                              captcha: _captcha,
                             );
                       }
                     },
@@ -160,6 +207,18 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
         ),
       ),
     );
+  }
+
+  Widget _buildBase64Image(String base64String) {
+    try {
+      final String base64Image = base64String.split(',').last;
+      return Image.memory(
+        base64Decode(base64Image),
+        fit: BoxFit.fill,
+      );
+    } catch (e) {
+      return const Center(child: Text('图片格式错误', style: TextStyle(fontSize: 12)));
+    }
   }
 }
 

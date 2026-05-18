@@ -16,8 +16,10 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
     try {
       final repository = _ref.read(importRepositoryProvider);
-      await repository.importFromUrl(url);
+      final timetable = await repository.importFromUrl(url);
+      _ref.read(selectedTimetableIdProvider.notifier).state = timetable.id;
       _ref.invalidate(timetablesProvider);
+      _ref.invalidate(currentTimetableDetailProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       String errMsg = '导入失败';
@@ -34,18 +36,27 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
     required String password,
     required int year,
     required String semester,
+    required String captchaId,
+    required String captcha,
   }) async {
     state = const AsyncLoading();
     try {
       final repository = _ref.read(importRepositoryProvider);
-      await repository.importFromJwc(
+      final data = await repository.importFromJwc(
         school: school,
         username: username,
         password: password,
         year: year,
         semester: semester,
+        captchaId: captchaId,
+        captcha: captcha,
       );
+      final timetable = data['timetable'];
+      if (timetable is Map<String, dynamic> && timetable['id'] is String) {
+        _ref.read(selectedTimetableIdProvider.notifier).state = timetable['id'] as String;
+      }
       _ref.invalidate(timetablesProvider);
+      _ref.invalidate(currentTimetableDetailProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       String errMsg = '教务系统登录失败或导入失败';
@@ -53,6 +64,41 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
         errMsg = e.response?.data['error'] ?? errMsg;
       }
       state = AsyncError(errMsg, st);
+    }
+  }
+}
+
+// ---- 验证码状态管理 ----
+class CaptchaState {
+  final String? captchaId;
+  final String? captchaImage;
+  final bool isLoading;
+  final String? error;
+
+  CaptchaState({this.captchaId, this.captchaImage, this.isLoading = false, this.error});
+}
+
+final captchaProvider = StateNotifierProvider<CaptchaNotifier, CaptchaState>((ref) {
+  return CaptchaNotifier(ref);
+});
+
+class CaptchaNotifier extends StateNotifier<CaptchaState> {
+  final Ref _ref;
+
+  CaptchaNotifier(this._ref) : super(CaptchaState());
+
+  Future<void> fetchCaptcha(String school) async {
+    state = CaptchaState(isLoading: true);
+    try {
+      final repo = _ref.read(importRepositoryProvider);
+      final data = await repo.getJwcCaptcha(school);
+      state = CaptchaState(
+        captchaId: data['captchaId'],
+        captchaImage: data['captchaImage'],
+        isLoading: false,
+      );
+    } catch (e) {
+      state = CaptchaState(error: '获取验证码失败', isLoading: false);
     }
   }
 }
