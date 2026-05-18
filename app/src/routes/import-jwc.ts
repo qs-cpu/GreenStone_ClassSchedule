@@ -1,21 +1,122 @@
 import { Elysia, t } from 'elysia'
 import { schools } from '../parsers/schools'
+import { FdzcFetcher } from '../parsers/schools/fdzc.fetcher'
 import { db, schema } from '../db'
+import { Buffer } from 'node:buffer'
+
+const CAPTCHA_TTL_MS = 5 * 60 * 1000
+const captchaSessions = new Map<string, { fetcher: FdzcFetcher; createdAt: number }>()
+
+function normalizeSemester(semester: string) {
+  if (semester === '1' || semester === '上') return '上'
+  if (semester === '2' || semester === '下') return '下'
+  return semester
+}
+
+function cleanupCaptchaSessions() {
+  const now = Date.now()
+  for (const [id, session] of captchaSessions) {
+    if (now - session.createdAt > CAPTCHA_TTL_MS) {
+      captchaSessions.delete(id)
+    }
+  }
+}
+
+function createSchoolFetcher(school: string) {
+  if (school === 'fdzc') {
+    return new FdzcFetcher()
+  }
+  return null
+}
+
+async function resolveImportOwner(userId: string | undefined, termId: string | undefined, year: number, semester: string) {
+  if (userId && termId) {
+    return { userId, termId }
+  }
+
+  const username = 'default-import-user'
+  let user = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.username, username),
+  })
+
+  if (!user) {
+    ;[user] = await db.insert(schema.users)
+      .values({
+        username,
+        nickname: '默认导入用户',
+      })
+      .returning()
+  }
+
+  const normalizedSemester = normalizeSemester(semester)
+  const termName = `${year}年${normalizedSemester}`
+  const existingTerms = await db.select().from(schema.terms)
+  let term = existingTerms.find((item) => item.userId === user.id && item.name === termName)
+
+  if (!term) {
+    const startDate = normalizedSemester === '上' ? new Date(`${year}-09-01`) : new Date(`${year}-02-20`)
+    const endDate = normalizedSemester === '上' ? new Date(`${year + 1}-01-20`) : new Date(`${year}-07-10`)
+    ;[term] = await db.insert(schema.terms)
+      .values({
+        userId: user.id,
+        name: termName,
+        startDate,
+        endDate,
+      })
+      .returning()
+  }
+
+  return { userId: user.id, termId: term.id }
+}
 
 export const importJwcRoutes = new Elysia()
   .onRequest(() => console.log('[DEBUG] import-jwc route hit'))
   .group('/api/import-jwc', (app) =>
-    app.post(
+    app.get(
+      '/captcha',
+      async ({ query, set }) => {
+        cleanupCaptchaSessions()
+
+        const school = query.school
+        const fetcher = createSchoolFetcher(school)
+        if (!fetcher) {
+          set.status = 400
+          return { error: `Unsupported school: ${school}` }
+        }
+
+        try {
+          const image = await fetcher.fetchCaptcha()
+          const captchaId = crypto.randomUUID()
+          captchaSessions.set(captchaId, { fetcher, createdAt: Date.now() })
+          return {
+            captchaId,
+            captchaImage: `data:image/bmp;base64,${Buffer.from(image).toString('base64')}`,
+          }
+        } catch (error) {
+          set.status = 500
+          const message = error instanceof Error ? error.message : String(error)
+          return { error: message }
+        }
+      },
+      {
+        query: t.Object({
+          school: t.String(),
+        }),
+      }
+    )
+    .post(
       '/',
       async ({ body, set }) => {
-        const { school, userId, termId, username, password, year, semester } = body as {
+        const { school, username, password, year, semester, userId, termId, captchaId, captcha } = body as {
           school: string
-          userId: string
-          termId: string
           username: string
           password: string
           year: number
           semester: string
+          userId?: string
+          termId?: string
+          captchaId?: string
+          captcha?: string
         }
 
         const fetcher = schools[school]
@@ -25,15 +126,32 @@ export const importJwcRoutes = new Elysia()
         }
 
         try {
-          await fetcher.login(username, password)
-          const courses = await fetcher.fetchTimetable(year, semester)
-          const beginDate = await fetcher.fetchBeginDate(year, semester)
+          let activeFetcher = fetcher
+          const normalizedSemester = normalizeSemester(semester)
+
+          if (captchaId && captcha) {
+            const session = captchaSessions.get(captchaId)
+            if (!session) {
+              set.status = 400
+              return { error: '验证码已过期，请刷新验证码后重试' }
+            }
+
+            activeFetcher = session.fetcher
+            await session.fetcher.loginWithCaptcha(username, password, captcha)
+            captchaSessions.delete(captchaId)
+          } else {
+            await fetcher.login(username, password)
+          }
+
+          const courses = await activeFetcher.fetchTimetable(year, normalizedSemester)
+          const beginDate = await activeFetcher.fetchBeginDate(year, normalizedSemester)
+          const owner = await resolveImportOwner(userId, termId, year, normalizedSemester)
 
           const [timetable] = await db.insert(schema.timetables)
             .values({
-              userId,
-              termId,
-              title: `${year}年${semester}学期课程表`,
+              userId: owner.userId,
+              termId: owner.termId,
+              title: `${year}年${normalizedSemester}课程表`,
             })
             .returning()
 
@@ -89,12 +207,14 @@ export const importJwcRoutes = new Elysia()
       {
         body: t.Object({
           school: t.String(),
-          userId: t.String(),
-          termId: t.String(),
+          userId: t.Optional(t.String()),
+          termId: t.Optional(t.String()),
           username: t.String(),
           password: t.String(),
           year: t.Number(),
           semester: t.String(),
+          captchaId: t.Optional(t.String()),
+          captcha: t.Optional(t.String()),
         }),
       }
     )

@@ -52,6 +52,49 @@ interface InfoToken {
   even?: boolean
 }
 
+function decodeHtml(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+}
+
+function stripTags(html: string): string {
+  return decodeHtml(html.replace(/<[^>]*>/g, ' '))
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function parseWeekRanges(text: string): Array<[number, number]> {
+  return [...text.matchAll(/(\d+)\s*[～~-]\s*(\d+)/g)]
+    .map((match) => [Number(match[1]), Number(match[2])] as [number, number])
+    .filter(([start, end]) => start > 0 && end > 0)
+}
+
+function parseCourseList(html: string): Array<{ name: string; teacher: string; weeks: Array<[number, number]> }> {
+  const courses: Array<{ name: string; teacher: string; weeks: Array<[number, number]> }> = []
+  const rowPattern = /<tr\b[^>]*>\s*<td\b[^>]*rowspan="?\d+"?[^>]*>([\s\S]*?)<\/td>([\s\S]*?)<\/tr>/gi
+
+  for (const match of html.matchAll(rowPattern)) {
+    const name = stripTags(match[1]).replace(/^&nbsp;|\s+$/g, '').trim()
+    const rest = match[2]
+    const cells = [...rest.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((cell) => stripTags(cell[1]))
+    if (cells.length < 10) continue
+
+    const teacher = cells[1] || ''
+    const weeks = parseWeekRanges(cells.at(-1) || '')
+
+    if (name && name !== '课程名称') {
+      courses.push({ name: name.replaceAll(' ', ''), teacher, weeks })
+    }
+  }
+
+  return courses
+}
+
 export async function parseFullTable(html: string): Promise<ParsedCourse[]> {
   const leftTable: string[][] = []
   const rightTable: Array<[number, string | null, ...string[]]> = []
@@ -96,20 +139,21 @@ export async function parseFullTable(html: string): Promise<ParsedCourse[]> {
   if (leftCurrentCourse.length > 0) leftTable.push(leftCurrentCourse)
   if (rightCurrentCourse) rightTable.push(rightCurrentCourse)
 
-  const leftMap = new Map<string, { teacher: string, weeks: Array<[number, number]> }>(
-    leftTable.map((v) => {
-      const name = v[0]?.replaceAll(' ', '') || ''
-      const weeks: Array<[number, number]> = v
-        .filter((item) => item.includes('～'))
-        .flatMap((str) => {
-          return str.split(',').map((range) => {
-            const [start, end] = range.split('～').map(Number)
-            return [start, end] as [number, number]
-          })
-        })
-      return [name, { teacher: v[4] || '', weeks }]
-    })
-  )
+  const listedCourses = parseCourseList(html)
+  const leftMap = new Map<string, { teacher: string, weeks: Array<[number, number]> }>()
+
+  for (const course of listedCourses) {
+    leftMap.set(course.name, { teacher: course.teacher, weeks: course.weeks })
+  }
+
+  for (const row of leftTable) {
+    const name = row[0]?.replaceAll(' ', '') || ''
+    if (!name || leftMap.has(name)) continue
+    const weeks: Array<[number, number]> = row
+      .filter((item) => item.includes('～'))
+      .flatMap(parseWeekRanges)
+    leftMap.set(name, { teacher: row[4] || '', weeks })
+  }
 
   const splitBy = <T>(arr: T[], cond: (x: T) => boolean): T[][] =>
     arr.reduce((res: T[][], x: T) => {
@@ -206,6 +250,17 @@ export async function parseFullTable(html: string): Promise<ParsedCourse[]> {
         sessions: [session],
       })
     }
+  }
+
+  for (const [title, detail] of leftMap) {
+    const alreadyParsed = courses.some((course) => course.title === title)
+    if (alreadyParsed) continue
+
+    courses.push({
+      title,
+      teacher: detail.teacher,
+      sessions: [],
+    })
   }
 
   return courses

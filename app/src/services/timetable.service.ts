@@ -1,9 +1,11 @@
 import { db, schema } from '../db'
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 export class TimetableService {
   async findAll() {
-    return db.select().from(schema.timetables).execute()
+    return db.select().from(schema.timetables)
+      .orderBy(desc(schema.timetables.createdAt))
+      .execute()
   }
 
   async findOne(id: string) {
@@ -19,7 +21,20 @@ export class TimetableService {
       courses.map(async (course) => {
         const sessions = await db.select().from(schema.courseSessions)
           .where(eq(schema.courseSessions.courseId, course.id))
-        return { ...course, sessions }
+
+        const sessionsWithLocations = await Promise.all(
+          sessions.map(async (session) => {
+            const locations = await db.select().from(schema.locations)
+              .where(eq(schema.locations.sessionId, session.id))
+
+            return {
+              ...session,
+              location: locations[0]?.locationText ?? null,
+            }
+          })
+        )
+
+        return { ...course, sessions: sessionsWithLocations }
       })
     )
 
