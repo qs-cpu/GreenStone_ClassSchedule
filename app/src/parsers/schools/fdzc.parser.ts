@@ -242,7 +242,17 @@ export async function parseFullTable(html: string): Promise<ParsedCourse[]> {
     }
 
     if (existing) {
-      existing.sessions.push(session)
+      const duplicate = existing.sessions.find(s =>
+        s.weekday === session.weekday &&
+        s.startSection === session.startSection &&
+        s.endSection === session.endSection &&
+        s.startWeek === session.startWeek &&
+        s.endWeek === session.endWeek &&
+        s.location === session.location
+      )
+      if (!duplicate) {
+        existing.sessions.push(session)
+      }
     } else {
       courses.push({
         title: name,
