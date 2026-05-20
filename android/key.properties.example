@@ -1,0 +1,4 @@
+storePassword=change_me
+keyPassword=change_me
+keyAlias=greenstone
+storeFile=../release-key.jks

@@ -3,18 +3,20 @@ import { db, schema } from '../db'
 import { detectSourceType } from '../parsers/strategies/detector'
 import { IcsImporter } from '../parsers/importers/ics.importer'
 import { JsonImporter } from '../parsers/importers/json.importer'
+import { validateUrl } from '../utils/url.validator'
 
 export class ImportService {
   private importers = [new IcsImporter(), new JsonImporter()]
 
   async import(url: string, termId?: string) {
     // 1. 校验 URL
-    const validatedUrl = this.validateUrl(url)
+    const validatedUrl = await validateUrl(url)
 
     // 2. 获取内容
     const response = await axios.get(validatedUrl, {
       timeout: 10000,
       maxContentLength: 5 * 1024 * 1024,
+      maxRedirects: 0,
     })
 
     // 3. 识别来源类型
@@ -93,11 +95,4 @@ export class ImportService {
     return timetable
   }
 
-  private validateUrl(url: string): string {
-    const parsed = new URL(url)
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      throw new Error('Only HTTP/HTTPS allowed')
-    }
-    return url
-  }
 }

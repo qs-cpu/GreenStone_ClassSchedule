@@ -1,4 +1,4 @@
-package com.example.schedule
+package com.greenstone.classschedule
 
 import io.flutter.embedding.android.FlutterActivity
 

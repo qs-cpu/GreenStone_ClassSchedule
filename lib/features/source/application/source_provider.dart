@@ -6,13 +6,17 @@ final sourcesProvider = FutureProvider<List<TimetableSource>>((ref) async {
   return ref.read(sourceRepositoryProvider).getSources();
 });
 
-final sourceDetailProvider = FutureProvider.family<TimetableSource, String>((ref, id) async {
+final sourceDetailProvider = FutureProvider.family<TimetableSource, String>((
+  ref,
+  id,
+) async {
   return ref.read(sourceRepositoryProvider).getSourceDetail(id);
 });
 
-final syncSourceProvider = StateNotifierProvider<SyncNotifier, AsyncValue<void>>((ref) {
-  return SyncNotifier(ref);
-});
+final syncSourceProvider =
+    StateNotifierProvider<SyncNotifier, AsyncValue<void>>((ref) {
+      return SyncNotifier(ref);
+    });
 
 class SyncNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref _ref;

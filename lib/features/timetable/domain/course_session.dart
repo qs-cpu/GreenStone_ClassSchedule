@@ -20,5 +20,6 @@ abstract class CourseSession with _$CourseSession {
     required DateTime updatedAt,
   }) = _CourseSession;
 
-  factory CourseSession.fromJson(Map<String, dynamic> json) => _$CourseSessionFromJson(json);
+  factory CourseSession.fromJson(Map<String, dynamic> json) =>
+      _$CourseSessionFromJson(json);
 }

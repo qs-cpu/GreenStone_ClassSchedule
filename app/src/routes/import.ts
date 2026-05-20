@@ -8,10 +8,9 @@ export const importRoutes = new Elysia()
       '/',
       async ({ body, set }) => {
         const { url } = body as { url: string }
-        
-        validateUrl(url)
-        
-        const result = await new ImportService().import(url)
+
+        const validatedUrl = await validateUrl(url)
+        const result = await new ImportService().import(validatedUrl)
         
         set.status = 201
         return result

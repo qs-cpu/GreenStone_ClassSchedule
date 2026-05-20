@@ -16,5 +16,6 @@ abstract class SyncRecord with _$SyncRecord {
     required DateTime updatedAt,
   }) = _SyncRecord;
 
-  factory SyncRecord.fromJson(Map<String, dynamic> json) => _$SyncRecordFromJson(json);
+  factory SyncRecord.fromJson(Map<String, dynamic> json) =>
+      _$SyncRecordFromJson(json);
 }

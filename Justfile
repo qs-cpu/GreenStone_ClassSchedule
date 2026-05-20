@@ -41,12 +41,32 @@
 @run-android:
   flutter run -d android
 
+# Android运行（指定后端地址，适合真机或非默认环境）
+@run-android-url api_url:
+  flutter run -d android --dart-define=API_URL="{{api_url}}"
+
 # 构建 Web
 @build-web:
   flutter build web
 
-# 构建 APK
+# 构建 Debug APK
+@build-apk-debug:
+  flutter build apk --debug
+
+# 构建 APK（保持 Flutter 默认行为，兼容旧流程）
 @build-apk:
+  flutter build apk
+
+# 构建 Release APK（显式命令）
+@build-apk-release:
+  flutter build apk --release
+
+# 构建 Release APK（指定后端地址，适合真机或生产环境）
+@build-apk-release-url api_url:
+  flutter build apk --release --dart-define=API_URL="{{api_url}}"
+
+# 构建默认 APK（兼容旧命令）
+@build-apk-default:
   flutter build apk
 
 # 启动数据库

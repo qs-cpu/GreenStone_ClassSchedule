@@ -22,5 +22,6 @@ abstract class TimetableSource with _$TimetableSource {
     @Default([]) List<SyncRecord> syncRecords,
   }) = _TimetableSource;
 
-  factory TimetableSource.fromJson(Map<String, dynamic> json) => _$TimetableSourceFromJson(json);
+  factory TimetableSource.fromJson(Map<String, dynamic> json) =>
+      _$TimetableSourceFromJson(json);
 }

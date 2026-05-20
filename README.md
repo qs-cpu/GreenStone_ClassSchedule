@@ -2,6 +2,12 @@
 
 A new Flutter project.
 
+## 调试指南
+
+Web、Android 真机、模拟器、WSL 后端、`adb reverse`、APK 构建安装等详细流程见：
+
+- [DEBUG_GUIDE.md](./DEBUG_GUIDE.md)
+
 ## Environment Deployment Process
 
 ### Flutter 开发
@@ -102,9 +108,45 @@ flutter precache --android
 
 #### Build apk
 
-随后即可构建 apk 并进行安装测试：
+随后即可构建 apk 并进行安装测试。Web 端默认访问 `http://localhost:3001`，Android 模拟器默认访问 `http://10.0.2.2:3001`，真机或生产环境请通过 `API_URL` 指定后端地址：
 
 ```bash
 just init
-just build-apk
+just run-android
+just run-android-url http://192.168.1.10:3001
+just build-apk-release-url http://192.168.1.10:3001
 ```
+
+常用命令：
+
+```bash
+# Web
+just run-web
+just build-web
+
+# Android
+just devices
+just run-android
+just build-apk-debug
+just build-apk-release
+```
+
+Release 签名不再使用 debug key。正式发布前请复制 `android/key.properties.example` 为 `android/key.properties`，并配置真实签名信息：
+
+```properties
+storePassword=your_store_password
+keyPassword=your_key_password
+keyAlias=your_key_alias
+storeFile=../release-key.jks
+```
+
+如果还没有 keystore，可以在 `android/` 目录生成：
+
+```bash
+keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias greenstone
+```
+
+
+netsh interface portproxy add v4tov4 listenaddress=127.0.0.1 listenport=3001 connectaddress=172.20.81.39 connectport=3001
+adb reverse tcp:3001 tcp:3001
+flutter run -d AGQV023327008385 --dart-define=API_URL=http://127.0.0.1:3001

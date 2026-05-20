@@ -17,5 +17,6 @@ abstract class Timetable with _$Timetable {
     @Default([]) List<Course> courses,
   }) = _Timetable;
 
-  factory Timetable.fromJson(Map<String, dynamic> json) => _$TimetableFromJson(json);
+  factory Timetable.fromJson(Map<String, dynamic> json) =>
+      _$TimetableFromJson(json);
 }
