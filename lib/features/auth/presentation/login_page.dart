@@ -23,7 +23,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       state.whenOrNull(
         error: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.toString()), backgroundColor: Theme.of(context).colorScheme.error),
+            SnackBar(
+              content: Text(error.toString()),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
           );
         },
       );
@@ -42,44 +45,69 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.calendar_month, size: 80, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.calendar_month,
+                    size: 80,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(height: 32),
-                  const Text('GreenStone 课程表', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'GreenStone 课程表',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 32),
                   TextFormField(
-                    decoration: const InputDecoration(labelText: '用户名', border: OutlineInputBorder()),
-                    validator: (val) => (val == null || val.isEmpty) ? '请输入用户名' : null,
+                    decoration: const InputDecoration(
+                      labelText: '用户名',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? '请输入用户名' : null,
                     onSaved: (val) => _username = val!,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    decoration: const InputDecoration(labelText: '密码', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: '密码',
+                      border: OutlineInputBorder(),
+                    ),
                     obscureText: true,
-                    validator: (val) => (val == null || val.isEmpty) ? '请输入密码' : null,
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? '请输入密码' : null,
                     onSaved: (val) => _password = val!,
                   ),
                   const SizedBox(height: 32),
                   FilledButton(
                     onPressed: authState.isLoading
                         ? null
-                        : () {
+                        : () async {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();
-                              ref.read(authStateProvider.notifier).login(_username, _password).then((_) {
-                                // 如果没有抛出异常（即 hasError 为 false），由于有了全局路由守卫，会自动被重定向到 /
-                              });
+                              await ref
+                                  .read(authStateProvider.notifier)
+                                  .login(_username, _password);
                             }
                           },
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
                     child: authState.isLoading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Text('登录', style: TextStyle(fontSize: 16)),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.push('/register'),
                     child: const Text('没有账号？去注册'),
-                  )
+                  ),
                 ],
               ),
             ),

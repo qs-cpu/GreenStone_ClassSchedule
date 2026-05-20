@@ -11,33 +11,30 @@ class AuthRepository {
 
   AuthRepository(this._dio);
 
-  Future<void> register(String username, String password, String? nickname) async {
-    try {
-      await _dio.post(
-        ApiEndpoints.register,
-        data: {
-          'username': username,
-          'password': password,
-          if (nickname != null && nickname.isNotEmpty) 'nickname': nickname,
-        },
-      );
-    } catch (e) {
-      rethrow;
-    }
+  Future<void> register(
+    String username,
+    String password,
+    String? nickname,
+  ) async {
+    await _dio.post(
+      ApiEndpoints.register,
+      data: {
+        'username': username,
+        'password': password,
+        if (nickname != null && nickname.isNotEmpty) 'nickname': nickname,
+      },
+    );
   }
 
   Future<String> login(String username, String password) async {
-    try {
-      final response = await _dio.post(
-        ApiEndpoints.login,
-        data: {
-          'username': username,
-          'password': password,
-        },
-      );
-      return response.data['token'] as String;
-    } catch (e) {
-      rethrow;
+    final response = await _dio.post(
+      ApiEndpoints.login,
+      data: {'username': username, 'password': password},
+    );
+    final data = response.data;
+    if (data is Map && data['token'] is String) {
+      return data['token'] as String;
     }
+    throw const FormatException('登录响应缺少 token');
   }
 }
