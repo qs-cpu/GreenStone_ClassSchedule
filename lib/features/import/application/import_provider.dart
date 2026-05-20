@@ -3,9 +3,23 @@ import 'package:dio/dio.dart';
 import '../data/import_repository.dart';
 import '../../timetable/application/timetable_provider.dart';
 
-final importStateProvider = StateNotifierProvider<ImportNotifier, AsyncValue<void>>((ref) {
-  return ImportNotifier(ref);
-});
+String _dioErrorMessage(Object error, String fallback) {
+  if (error is! DioException) return fallback;
+
+  final data = error.response?.data;
+  if (data is Map && data['error'] != null) {
+    return data['error'].toString();
+  }
+  if (data is String && data.trim().isNotEmpty) {
+    return data;
+  }
+  return error.message ?? fallback;
+}
+
+final importStateProvider =
+    StateNotifierProvider<ImportNotifier, AsyncValue<void>>((ref) {
+      return ImportNotifier(ref);
+    });
 
 class ImportNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref _ref;
@@ -22,11 +36,7 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
       _ref.invalidate(currentTimetableDetailProvider);
       state = const AsyncData(null);
     } catch (e, st) {
-      String errMsg = '导入失败';
-      if (e is DioException && e.response?.data != null) {
-        errMsg = e.response?.data['error'] ?? errMsg;
-      }
-      state = AsyncError(errMsg, st);
+      state = AsyncError(_dioErrorMessage(e, '导入失败'), st);
     }
   }
 
@@ -53,17 +63,16 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
       );
       final timetable = data['timetable'];
       if (timetable is Map<String, dynamic> && timetable['id'] is String) {
-        _ref.read(selectedTimetableIdProvider.notifier).state = timetable['id'] as String;
+        _ref.read(selectedTimetableIdProvider.notifier).state =
+            timetable['id'] as String;
+      } else {
+        throw const FormatException('导入成功但服务端未返回有效课表 ID');
       }
       _ref.invalidate(timetablesProvider);
       _ref.invalidate(currentTimetableDetailProvider);
       state = const AsyncData(null);
     } catch (e, st) {
-      String errMsg = '教务系统登录失败或导入失败';
-      if (e is DioException && e.response?.data != null) {
-        errMsg = e.response?.data['error'] ?? errMsg;
-      }
-      state = AsyncError(errMsg, st);
+      state = AsyncError(_dioErrorMessage(e, '教务系统登录失败或导入失败'), st);
     }
   }
 }
@@ -75,10 +84,17 @@ class CaptchaState {
   final bool isLoading;
   final String? error;
 
-  CaptchaState({this.captchaId, this.captchaImage, this.isLoading = false, this.error});
+  CaptchaState({
+    this.captchaId,
+    this.captchaImage,
+    this.isLoading = false,
+    this.error,
+  });
 }
 
-final captchaProvider = StateNotifierProvider<CaptchaNotifier, CaptchaState>((ref) {
+final captchaProvider = StateNotifierProvider<CaptchaNotifier, CaptchaState>((
+  ref,
+) {
   return CaptchaNotifier(ref);
 });
 

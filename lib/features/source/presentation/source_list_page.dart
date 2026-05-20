@@ -23,7 +23,9 @@ class SourceListPage extends ConsumerWidget {
               final source = sources[index];
               return ListTile(
                 title: Text(source.sourceType),
-                subtitle: Text('最后同步: ${source.lastSyncedAt?.toLocal().toString() ?? "无"}'),
+                subtitle: Text(
+                  '最后同步: ${source.lastSyncedAt?.toLocal().toString().split('.')[0] ?? "无"}',
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   context.push('/sources/${source.id}');
@@ -41,7 +43,7 @@ class SourceListPage extends ConsumerWidget {
               ElevatedButton(
                 onPressed: () => ref.refresh(sourcesProvider),
                 child: const Text('重试'),
-              )
+              ),
             ],
           ),
         ),

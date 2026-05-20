@@ -15,16 +15,32 @@ class SourceRepository {
 
   Future<List<TimetableSource>> getSources() async {
     final response = await _dio.get(ApiEndpoints.sources);
-    return (response.data as List).map((e) => TimetableSource.fromJson(e)).toList();
+    final data = response.data;
+    if (data is! List) {
+      throw const FormatException('来源列表响应格式错误');
+    }
+    return data
+        .map(
+          (e) => TimetableSource.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
+        .toList();
   }
 
   Future<TimetableSource> getSourceDetail(String id) async {
     final response = await _dio.get(ApiEndpoints.sourceDetail(id));
-    return TimetableSource.fromJson(response.data);
+    final data = response.data;
+    if (data is! Map) {
+      throw const FormatException('来源详情响应格式错误');
+    }
+    return TimetableSource.fromJson(Map<String, dynamic>.from(data));
   }
 
   Future<SyncRecord> syncSource(String id) async {
     final response = await _dio.post(ApiEndpoints.sourceSync(id));
-    return SyncRecord.fromJson(response.data);
+    final data = response.data;
+    if (data is! Map) {
+      throw const FormatException('同步响应格式错误');
+    }
+    return SyncRecord.fromJson(Map<String, dynamic>.from(data));
   }
 }
