@@ -68,11 +68,11 @@ export const recognizeCaptcha = async (img: Uint8Array): Promise<string> => {
     .map((segment) =>
       Object.entries(charDict)
         .reduce(
-          (best, [char, pattern]) =>
-            xorSum(segment, pattern) < best.score
-              ? { char, score: xorSum(segment, pattern) }
-              : best,
-          { char: '', score: Infinity }
+          (best, [char, pattern]) => {
+            const score = xorSum(segment, pattern)
+            return score < best.score ? { char, score } : best
+          },
+          { char: '', score: Infinity } as { char: string; score: number }
         ).char
     )
     .join('')

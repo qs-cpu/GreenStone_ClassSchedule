@@ -292,9 +292,9 @@ class _UrlImportTabState extends ConsumerState<UrlImportTab> {
               ).colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
+            child: Text(
               '支持从 .ics 文件链接或受支持的 JSON API 导入。如果是教务系统导入，请切换到左侧标签页。',
-              style: TextStyle(color: Colors.black87),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
           const SizedBox(height: 24),
@@ -313,9 +313,12 @@ class _UrlImportTabState extends ConsumerState<UrlImportTab> {
                 ? null
                 : () {
                     final url = _urlController.text.trim();
-                    if (url.isEmpty) {
+                    final uri = Uri.tryParse(url);
+                    if (uri == null ||
+                        uri.host.isEmpty ||
+                        (uri.scheme != 'http' && uri.scheme != 'https')) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('请输入有效的 URL')),
+                        const SnackBar(content: Text('请输入有效的 http/https URL')),
                       );
                       return;
                     }
