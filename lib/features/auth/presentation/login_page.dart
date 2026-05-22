@@ -81,12 +81,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   FilledButton(
                     onPressed: authState.isLoading
                         ? null
-                        : () async {
+                        : () {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();
-                              await ref
+                              ref
                                   .read(authStateProvider.notifier)
-                                  .login(_username, _password);
+                                  .login(_username, _password)
+                                  .then((_) {
+                                    // 如果没有抛出异常（即 hasError 为 false），由于有了全局路由守卫，会自动被重定向到 /
+                                  });
                             }
                           },
                     style: FilledButton.styleFrom(

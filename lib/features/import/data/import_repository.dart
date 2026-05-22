@@ -18,23 +18,22 @@ class ImportRepository {
       data: {'url': url},
     );
     final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return Timetable.fromJson(data);
+    if (data is! Map) {
+      throw const FormatException('URL 导入响应格式错误');
     }
-    if (data is Map) {
-      return Timetable.fromJson(Map<String, dynamic>.from(data));
-    }
-    throw const FormatException('URL 导入响应格式错误');
+    return Timetable.fromJson(Map<String, dynamic>.from(data));
   }
 
   // 获取验证码
   Future<Map<String, dynamic>> getJwcCaptcha(String school) async {
     final response = await _dio.get(ApiEndpoints.jwcCaptcha(school));
     final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data; // 返回包含 captchaId, captchaImage 的 Map
+    if (data is! Map) {
+      throw const FormatException('验证码响应格式错误');
     }
-    throw const FormatException('验证码响应格式错误');
+    return Map<String, dynamic>.from(
+      data,
+    ); // 返回包含 captchaId, captchaImage 的 Map
   }
 
   // 带验证码的教务导入
@@ -60,9 +59,9 @@ class ImportRepository {
       },
     );
     final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data;
+    if (data is! Map) {
+      throw const FormatException('教务导入响应格式错误');
     }
-    throw const FormatException('教务导入响应格式错误');
+    return Map<String, dynamic>.from(data);
   }
 }

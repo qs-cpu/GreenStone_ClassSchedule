@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/timetable_cache_repository.dart';
 import '../data/timetable_repository.dart';
 import '../domain/timetable.dart';
 
@@ -9,7 +10,9 @@ final timetablesProvider = FutureProvider<List<Timetable>>((ref) async {
 });
 
 // 当前选中的课表 ID
-final selectedTimetableIdProvider = StateProvider<String?>((ref) => null);
+final selectedTimetableIdProvider = StateProvider<String?>((ref) {
+  return ref.watch(timetableCacheRepositoryProvider).getSelectedTimetableId();
+});
 
 // 当前选中的课表详情数据 (根据选中的 ID 自动拉取详情)
 final currentTimetableDetailProvider = FutureProvider<Timetable?>((ref) async {
@@ -22,7 +25,9 @@ final currentTimetableDetailProvider = FutureProvider<Timetable?>((ref) async {
     if (list.isNotEmpty) {
       final sortedList = [...list]
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return await repo.getTimetableDetail(sortedList.first.id);
+      final timetable = await repo.getTimetableDetail(sortedList.first.id);
+      ref.read(selectedTimetableIdProvider.notifier).state = timetable.id;
+      return timetable;
     }
     return null; // 用户没有任何课表
   } else {

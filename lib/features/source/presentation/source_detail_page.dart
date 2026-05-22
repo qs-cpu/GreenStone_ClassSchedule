@@ -57,12 +57,12 @@ class SourceDetailPage extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildInfoCard('基本信息', {
-                '来源类型': source.sourceType,
-                '同步状态': source.syncStatus,
-                '原始链接': source.originalUrl,
-                '创建时间': source.createdAt.toLocal().toString().split('.')[0],
-              }),
+              _buildInfoCard('基本信息', [
+                '来源类型: ${source.sourceType}',
+                '同步状态: ${source.syncStatus}',
+                '原始链接: ${source.originalUrl}',
+                '创建时间: ${source.createdAt.toLocal().toString().split('.')[0]}',
+              ]),
               const SizedBox(height: 24),
               const Text(
                 '近期同步记录',
@@ -93,26 +93,12 @@ class SourceDetailPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('加载失败: $err', textAlign: TextAlign.center),
-              ),
-              ElevatedButton(
-                onPressed: () => ref.refresh(sourceDetailProvider(sourceId)),
-                child: const Text('重试'),
-              ),
-            ],
-          ),
-        ),
+        error: (err, _) => Center(child: Text('加载失败: $err')),
       ),
     );
   }
 
-  Widget _buildInfoCard(String title, Map<String, String> lines) {
+  Widget _buildInfoCard(String title, List<String> lines) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -124,27 +110,10 @@ class SourceDetailPage extends ConsumerWidget {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const Divider(),
-            ...lines.entries.map(
-              (entry) => Padding(
+            ...lines.map(
+              (line) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 72,
-                      child: Text(
-                        '${entry.key}:',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    Expanded(
-                      child: SelectableText(
-                        entry.value,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ],
-                ),
+                child: Text(line, style: const TextStyle(fontSize: 14)),
               ),
             ),
           ],

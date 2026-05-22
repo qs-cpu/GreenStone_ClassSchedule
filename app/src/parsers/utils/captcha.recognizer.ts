@@ -51,6 +51,10 @@ const xorSum = (a: Uint8Array, b: number[]): number => {
 }
 
 export const recognizeCaptcha = async (img: Uint8Array): Promise<string> => {
+  if (Object.keys(charDict).length === 0) {
+    throw new Error('自动验证码识别字模未配置，请使用手动验证码导入流程')
+  }
+
   const { decode } = await import('fast-bmp')
   const { data, width, height, channels } = decode(img)
   const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer)
