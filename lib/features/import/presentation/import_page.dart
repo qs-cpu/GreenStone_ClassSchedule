@@ -18,13 +18,19 @@ class _ImportPageState extends ConsumerState<ImportPage> {
       state.whenOrNull(
         error: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.toString()), backgroundColor: Theme.of(context).colorScheme.error),
+            SnackBar(
+              content: Text(error.toString()),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
           );
         },
         data: (_) {
           if (!state.isLoading && !state.hasError) {
-             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('导入成功！'), backgroundColor: Colors.green),
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('导入成功！'),
+                backgroundColor: Colors.green,
+              ),
             );
             context.pop(); // 返回上一页
           }
@@ -36,7 +42,10 @@ class _ImportPageState extends ConsumerState<ImportPage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('导入课表', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            '导入课表',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           bottom: const TabBar(
             tabs: [
               Tab(text: '教务系统导入'),
@@ -44,12 +53,7 @@ class _ImportPageState extends ConsumerState<ImportPage> {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            JwcImportTab(),
-            UrlImportTab(),
-          ],
-        ),
+        body: const TabBarView(children: [JwcImportTab(), UrlImportTab()]),
       ),
     );
   }
@@ -91,7 +95,7 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
         child: ListView(
           children: [
             DropdownButtonFormField<String>(
-              value: _school,
+              initialValue: _school,
               decoration: const InputDecoration(
                 labelText: '选择学校',
                 border: OutlineInputBorder(),
@@ -108,13 +112,19 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              decoration: const InputDecoration(labelText: '学号', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: '学号',
+                border: OutlineInputBorder(),
+              ),
               validator: (val) => (val == null || val.isEmpty) ? '请输入学号' : null,
               onSaved: (val) => _username = val!,
             ),
             const SizedBox(height: 16),
             TextFormField(
-              decoration: const InputDecoration(labelText: '密码', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: '密码',
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
               validator: (val) => (val == null || val.isEmpty) ? '请输入密码' : null,
               onSaved: (val) => _password = val!,
@@ -125,16 +135,23 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                 Expanded(
                   child: TextFormField(
                     initialValue: _year.toString(),
-                    decoration: const InputDecoration(labelText: '学年 (如 2024)', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: '学年 (如 2024)',
+                      border: OutlineInputBorder(),
+                    ),
                     keyboardType: TextInputType.number,
-                    onSaved: (val) => _year = int.tryParse(val ?? '') ?? 2024,
+                    onSaved: (val) =>
+                        _year = int.tryParse(val ?? '') ?? DateTime.now().year,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _semester,
-                    decoration: const InputDecoration(labelText: '学期', border: OutlineInputBorder()),
+                    initialValue: _semester,
+                    decoration: const InputDecoration(
+                      labelText: '学期',
+                      border: OutlineInputBorder(),
+                    ),
                     items: const [
                       DropdownMenuItem(value: '上', child: Text('上学期')),
                       DropdownMenuItem(value: '下', child: Text('下学期')),
@@ -152,14 +169,19 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    decoration: const InputDecoration(labelText: '验证码', border: OutlineInputBorder()),
-                    validator: (val) => (val == null || val.isEmpty) ? '请输入验证码' : null,
+                    decoration: const InputDecoration(
+                      labelText: '验证码',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) =>
+                        (val == null || val.isEmpty) ? '请输入验证码' : null,
                     onSaved: (val) => _captcha = val!,
                   ),
                 ),
                 const SizedBox(width: 16),
                 InkWell(
-                  onTap: () => ref.read(captchaProvider.notifier).fetchCaptcha(_school),
+                  onTap: () =>
+                      ref.read(captchaProvider.notifier).fetchCaptcha(_school),
                   child: Container(
                     height: 56,
                     width: 120,
@@ -171,8 +193,13 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                     child: captchaState.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : captchaState.captchaImage != null
-                            ? _buildBase64Image(captchaState.captchaImage!)
-                            : const Center(child: Text('获取失败，点击重试', style: TextStyle(fontSize: 12))),
+                        ? _buildBase64Image(captchaState.captchaImage!)
+                        : const Center(
+                            child: Text(
+                              '获取失败，点击重试',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -184,7 +211,9 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                   : () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
-                        ref.read(importStateProvider.notifier).importFromJwc(
+                        ref
+                            .read(importStateProvider.notifier)
+                            .importFromJwc(
                               school: _school,
                               username: _username,
                               password: _password,
@@ -197,10 +226,19 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
                     },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: importState.isLoading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                   : const Text('立即导入', style: TextStyle(fontSize: 16)),
             ),
           ],
@@ -212,12 +250,11 @@ class _JwcImportTabState extends ConsumerState<JwcImportTab> {
   Widget _buildBase64Image(String base64String) {
     try {
       final String base64Image = base64String.split(',').last;
-      return Image.memory(
-        base64Decode(base64Image),
-        fit: BoxFit.fill,
-      );
+      return Image.memory(base64Decode(base64Image), fit: BoxFit.fill);
     } catch (e) {
-      return const Center(child: Text('图片格式错误', style: TextStyle(fontSize: 12)));
+      return const Center(
+        child: Text('图片格式错误', style: TextStyle(fontSize: 12)),
+      );
     }
   }
 }
@@ -250,7 +287,9 @@ class _UrlImportTabState extends ConsumerState<UrlImportTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Text(
@@ -284,10 +323,19 @@ class _UrlImportTabState extends ConsumerState<UrlImportTab> {
                   },
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: importState.isLoading
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : const Text('开始解析并导入', style: TextStyle(fontSize: 16)),
           ),
         ],

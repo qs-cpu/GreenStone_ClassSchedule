@@ -2,10 +2,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../data/import_repository.dart';
 import '../../timetable/application/timetable_provider.dart';
+import '../../timetable/data/timetable_cache_repository.dart';
+import '../../timetable/data/timetable_repository.dart';
 
-final importStateProvider = StateNotifierProvider<ImportNotifier, AsyncValue<void>>((ref) {
-  return ImportNotifier(ref);
-});
+String _importErrorMessage(Object error, String fallback) {
+  if (error is! DioException) return error.toString();
+
+  final data = error.response?.data;
+  if (data is Map && data['error'] != null) {
+    return data['error'].toString();
+  }
+  if (data is String && data.trim().isNotEmpty) {
+    return data;
+  }
+  return error.message ?? fallback;
+}
+
+final importStateProvider =
+    StateNotifierProvider<ImportNotifier, AsyncValue<void>>((ref) {
+      return ImportNotifier(ref);
+    });
 
 class ImportNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref _ref;
@@ -16,17 +32,21 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
     try {
       final repository = _ref.read(importRepositoryProvider);
-      final timetable = await repository.importFromUrl(url);
+      final imported = await repository.importFromUrl(url);
+      final timetableRepository = _ref.read(timetableRepositoryProvider);
+      final cache = _ref.read(timetableCacheRepositoryProvider);
+      final timetable = imported.courses.isEmpty
+          ? await timetableRepository.getTimetableDetail(imported.id)
+          : imported;
+
+      await cache.cacheTimetableDetail(timetable);
+      await cache.setSelectedTimetableId(timetable.id);
       _ref.read(selectedTimetableIdProvider.notifier).state = timetable.id;
       _ref.invalidate(timetablesProvider);
       _ref.invalidate(currentTimetableDetailProvider);
       state = const AsyncData(null);
     } catch (e, st) {
-      String errMsg = '导入失败';
-      if (e is DioException && e.response?.data != null) {
-        errMsg = e.response?.data['error'] ?? errMsg;
-      }
-      state = AsyncError(errMsg, st);
+      state = AsyncError(_importErrorMessage(e, '导入失败'), st);
     }
   }
 
@@ -53,17 +73,24 @@ class ImportNotifier extends StateNotifier<AsyncValue<void>> {
       );
       final timetable = data['timetable'];
       if (timetable is Map<String, dynamic> && timetable['id'] is String) {
-        _ref.read(selectedTimetableIdProvider.notifier).state = timetable['id'] as String;
+        final timetableId = timetable['id'] as String;
+        final timetableRepository = _ref.read(timetableRepositoryProvider);
+        final cache = _ref.read(timetableCacheRepositoryProvider);
+        final detail = await timetableRepository.getTimetableDetail(
+          timetableId,
+        );
+
+        await cache.cacheTimetableDetail(detail);
+        await cache.setSelectedTimetableId(timetableId);
+        _ref.read(selectedTimetableIdProvider.notifier).state = timetableId;
+      } else {
+        throw const FormatException('导入成功但服务端未返回有效课表 ID');
       }
       _ref.invalidate(timetablesProvider);
       _ref.invalidate(currentTimetableDetailProvider);
       state = const AsyncData(null);
     } catch (e, st) {
-      String errMsg = '教务系统登录失败或导入失败';
-      if (e is DioException && e.response?.data != null) {
-        errMsg = e.response?.data['error'] ?? errMsg;
-      }
-      state = AsyncError(errMsg, st);
+      state = AsyncError(_importErrorMessage(e, '教务系统登录失败或导入失败'), st);
     }
   }
 }
@@ -75,10 +102,17 @@ class CaptchaState {
   final bool isLoading;
   final String? error;
 
-  CaptchaState({this.captchaId, this.captchaImage, this.isLoading = false, this.error});
+  CaptchaState({
+    this.captchaId,
+    this.captchaImage,
+    this.isLoading = false,
+    this.error,
+  });
 }
 
-final captchaProvider = StateNotifierProvider<CaptchaNotifier, CaptchaState>((ref) {
+final captchaProvider = StateNotifierProvider<CaptchaNotifier, CaptchaState>((
+  ref,
+) {
   return CaptchaNotifier(ref);
 });
 

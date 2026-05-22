@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../application/timetable_provider.dart';
+import '../data/timetable_cache_repository.dart';
 import '../domain/course.dart';
 import '../domain/timetable.dart';
 
@@ -28,9 +29,12 @@ class TimetableHomePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: detailAsync.when(
-          data: (timetable) => Text(timetable?.title ?? '暂无课表', style: const TextStyle(fontWeight: FontWeight.bold)),
+          data: (timetable) => Text(
+            timetable?.title ?? '暂无课表',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           loading: () => const Text('加载中...'),
-          error: (_, __) => const Text('加载失败'),
+          error: (error, stackTrace) => const Text('加载失败'),
         ),
         actions: [
           timetablesAsync.when(
@@ -39,16 +43,22 @@ class TimetableHomePage extends ConsumerWidget {
               tooltip: '切换课表',
               enabled: timetables.isNotEmpty,
               onSelected: (id) {
+                ref
+                    .read(timetableCacheRepositoryProvider)
+                    .setSelectedTimetableId(id);
                 ref.read(selectedTimetableIdProvider.notifier).state = id;
                 ref.invalidate(currentTimetableDetailProvider);
               },
               itemBuilder: (context) {
                 final selectedId = ref.read(selectedTimetableIdProvider);
-                final sortedTimetables = [...timetables]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                final sortedTimetables = [...timetables]
+                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
                 return sortedTimetables.map((timetable) {
-                  final isSelected = selectedId == timetable.id ||
-                      (selectedId == null && timetable.id == sortedTimetables.first.id);
+                  final isSelected =
+                      selectedId == timetable.id ||
+                      (selectedId == null &&
+                          timetable.id == sortedTimetables.first.id);
                   final createdAt = timetable.createdAt;
                   final importedAt =
                       '${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} '
@@ -59,9 +69,13 @@ class TimetableHomePage extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(
-                          isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
                           size: 18,
-                          color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -75,9 +89,12 @@ class TimetableHomePage extends ConsumerWidget {
                               ),
                               Text(
                                 importedAt,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
                               ),
                             ],
                           ),
@@ -98,7 +115,7 @@ class TimetableHomePage extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, __) => IconButton(
+            error: (error, stackTrace) => IconButton(
               icon: const Icon(Icons.calendar_month),
               tooltip: '课表列表加载失败',
               onPressed: () => ref.invalidate(timetablesProvider),
@@ -134,7 +151,7 @@ class TimetableHomePage extends ConsumerWidget {
               ElevatedButton(
                 onPressed: () => ref.refresh(currentTimetableDetailProvider),
                 child: const Text('重试'),
-              )
+              ),
             ],
           ),
         ),
@@ -148,10 +165,18 @@ class TimetableHomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildTimetableView(BuildContext context, WidgetRef ref, Timetable timetable) {
+  Widget _buildTimetableView(
+    BuildContext context,
+    WidgetRef ref,
+    Timetable timetable,
+  ) {
     final isDayView = ref.watch(isDayViewProvider);
-    final unscheduledCourses = timetable.courses.where((course) => course.sessions.isEmpty).toList();
-    final hasScheduledCourses = timetable.courses.any((course) => course.sessions.isNotEmpty);
+    final unscheduledCourses = timetable.courses
+        .where((course) => course.sessions.isEmpty)
+        .toList();
+    final hasScheduledCourses = timetable.courses.any(
+      (course) => course.sessions.isNotEmpty,
+    );
 
     return Column(
       children: [
@@ -185,7 +210,9 @@ class TimetableHomePage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTimeColumn(),
-                      Expanded(child: _buildClassesGrid(context, timetable, isDayView)),
+                      Expanded(
+                        child: _buildClassesGrid(context, timetable, isDayView),
+                      ),
                     ],
                   ),
                   if (unscheduledCourses.isNotEmpty)
@@ -209,7 +236,9 @@ class TimetableHomePage extends ConsumerWidget {
         children: [
           Text(
             '未安排具体节次的课程',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           ...courses.map((course) {
@@ -219,9 +248,13 @@ class TimetableHomePage extends ConsumerWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.55,
+                ),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.6)),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+                ),
               ),
               child: Row(
                 children: [
@@ -240,7 +273,10 @@ class TimetableHomePage extends ConsumerWidget {
                         if (teacher != null && teacher.isNotEmpty)
                           Text(
                             teacher,
-                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -260,11 +296,16 @@ class TimetableHomePage extends ConsumerWidget {
     final now = DateTime.now();
     final todayIndex = now.weekday - 1;
     final monday = now.subtract(Duration(days: todayIndex));
-    
-    final days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-    final dates = List.generate(7, (index) => monday.add(Duration(days: index)).day.toString());
 
-    List<int> displayIndices = isDayView ? [todayIndex] : List.generate(7, (i) => i);
+    final days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    final dates = List.generate(
+      7,
+      (index) => monday.add(Duration(days: index)).day.toString(),
+    );
+
+    List<int> displayIndices = isDayView
+        ? [todayIndex]
+        : List.generate(7, (i) => i);
 
     return Container(
       padding: const EdgeInsets.only(left: 40, bottom: 10),
@@ -296,7 +337,9 @@ class TimetableHomePage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isToday ? const Color(0xFFFF7E9C) : Colors.transparent,
+                    color: isToday
+                        ? const Color(0xFFFF7E9C)
+                        : Colors.transparent,
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -334,10 +377,16 @@ class TimetableHomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildClassesGrid(BuildContext context, Timetable timetable, bool isDayView) {
+  Widget _buildClassesGrid(
+    BuildContext context,
+    Timetable timetable,
+    bool isDayView,
+  ) {
     final todayIndex = DateTime.now().weekday - 1;
     final numCols = isDayView ? 1 : 7;
-    final hasScheduledCourses = timetable.courses.any((course) => course.sessions.isNotEmpty);
+    final hasScheduledCourses = timetable.courses.any(
+      (course) => course.sessions.isNotEmpty,
+    );
 
     return SizedBox(
       height: hasScheduledCourses ? 60 * 12.0 : 60 * 4.0,
@@ -347,21 +396,27 @@ class TimetableHomePage extends ConsumerWidget {
           final children = <Widget>[
             Positioned.fill(
               child: Row(
-                children: List.generate(numCols, (index) => Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+                children: List.generate(
+                  numCols,
+                  (index) => Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: Colors.grey.withValues(alpha: 0.1),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                )),
+                ),
               ),
             ),
           ];
 
           for (var course in timetable.courses) {
-            final color = _candyColors[course.id.hashCode.abs() % _candyColors.length];
+            final color =
+                _candyColors[course.id.hashCode.abs() % _candyColors.length];
 
             for (var session in course.sessions) {
               final sessionDayIndex = session.weekday - 1;
@@ -374,15 +429,17 @@ class TimetableHomePage extends ConsumerWidget {
               final endPeriod = session.endSection.clamp(startPeriod, 12);
               final displayDayIndex = isDayView ? 0 : sessionDayIndex;
 
-              children.add(_buildClassCard(
-                colWidth: colWidth,
-                dayIndex: displayDayIndex,
-                startPeriod: startPeriod,
-                duration: endPeriod - startPeriod + 1,
-                title: course.title,
-                room: session.location ?? session.note ?? '地点未公布',
-                color: color,
-              ));
+              children.add(
+                _buildClassCard(
+                  colWidth: colWidth,
+                  dayIndex: displayDayIndex,
+                  startPeriod: startPeriod,
+                  duration: endPeriod - startPeriod + 1,
+                  title: course.title,
+                  room: session.location ?? session.note ?? '地点未公布',
+                  color: color,
+                ),
+              );
             }
           }
 
