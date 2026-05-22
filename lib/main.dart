@@ -28,6 +28,7 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'GreenStone',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: appRouter,
     );
