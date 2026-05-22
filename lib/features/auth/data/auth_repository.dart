@@ -11,7 +11,11 @@ class AuthRepository {
 
   AuthRepository(this._dio);
 
-  Future<void> register(String username, String password, String? nickname) async {
+  Future<void> register(
+    String username,
+    String password,
+    String? nickname,
+  ) async {
     try {
       await _dio.post(
         ApiEndpoints.register,
@@ -30,10 +34,7 @@ class AuthRepository {
     try {
       final response = await _dio.post(
         ApiEndpoints.login,
-        data: {
-          'username': username,
-          'password': password,
-        },
+        data: {'username': username, 'password': password},
       );
       return response.data['token'] as String;
     } catch (e) {

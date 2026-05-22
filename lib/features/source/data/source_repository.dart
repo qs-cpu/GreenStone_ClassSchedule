@@ -15,7 +15,9 @@ class SourceRepository {
 
   Future<List<TimetableSource>> getSources() async {
     final response = await _dio.get(ApiEndpoints.sources);
-    return (response.data as List).map((e) => TimetableSource.fromJson(e)).toList();
+    return (response.data as List)
+        .map((e) => TimetableSource.fromJson(e))
+        .toList();
   }
 
   Future<TimetableSource> getSourceDetail(String id) async {

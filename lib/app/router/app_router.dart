@@ -14,7 +14,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isLoggingIn =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
       final isLoggedIn = token != null && token.isNotEmpty;
 
       // 如果未登录且没有在登录/注册页面，重定向到登录页
@@ -30,10 +32,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
@@ -42,10 +41,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         builder: (context, state) => const TimetableHomePage(),
       ),
-      GoRoute(
-        path: '/import',
-        builder: (context, state) => const ImportPage(),
-      ),
+      GoRoute(path: '/import', builder: (context, state) => const ImportPage()),
       GoRoute(
         path: '/sources',
         builder: (context, state) => const SourceListPage(),

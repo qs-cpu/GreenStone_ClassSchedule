@@ -49,9 +49,11 @@ class TokenNotifier extends StateNotifier<String?> {
 }
 
 // 登录/注册状态管理
-final authStateProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
-  return AuthNotifier(ref);
-});
+final authStateProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void>>(
+  (ref) {
+    return AuthNotifier(ref);
+  },
+);
 
 class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref _ref;
@@ -70,7 +72,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  Future<void> register(String username, String password, String? nickname) async {
+  Future<void> register(
+    String username,
+    String password,
+    String? nickname,
+  ) async {
     state = const AsyncLoading();
     try {
       final repo = _ref.read(authRepositoryProvider);
