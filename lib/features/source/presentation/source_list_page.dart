@@ -24,7 +24,7 @@ class SourceListPage extends ConsumerWidget {
               return ListTile(
                 title: Text(source.sourceType),
                 subtitle: Text(
-                  '最后同步: ${source.lastSyncedAt?.toLocal().toString() ?? "无"}',
+                  '最后同步: ${source.lastSyncedAt?.toLocal().toString().split('.')[0] ?? "无"}',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {

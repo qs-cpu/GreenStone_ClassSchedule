@@ -7,6 +7,16 @@ final dioProvider = Provider<Dio>((ref) {
   // 修改后端端口默认值为 3001 以适配最新 API 文档
   const defaultUrl = kIsWeb ? 'http://localhost:3001' : 'http://10.0.2.2:3001';
   const baseUrl = String.fromEnvironment('API_URL', defaultValue: defaultUrl);
+  const allowInsecureApi = bool.fromEnvironment(
+    'ALLOW_INSECURE_API',
+    defaultValue: kDebugMode,
+  );
+
+  if (!allowInsecureApi && baseUrl.startsWith('http://')) {
+    throw StateError(
+      'Release API_URL must use HTTPS, or explicitly set ALLOW_INSECURE_API=true for trusted testing.',
+    );
+  }
 
   final dio = Dio(
     BaseOptions(
@@ -29,7 +39,8 @@ final dioProvider = Provider<Dio>((ref) {
       },
       onError: (DioException e, handler) {
         // 收到 401 自动清空本地 token (踢出登录)
-        if (e.response?.statusCode == 401) {
+        if (e.response?.statusCode == 401 &&
+            !e.requestOptions.path.startsWith('/api/auth/')) {
           ref.read(tokenProvider.notifier).clearToken();
         }
         return handler.next(e);
@@ -37,7 +48,16 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+  if (kDebugMode) {
+    dio.interceptors.add(
+      LogInterceptor(
+        requestBody: false,
+        responseBody: false,
+        requestHeader: false,
+        responseHeader: false,
+      ),
+    );
+  }
 
   return dio;
 });
@@ -51,7 +71,7 @@ class ApiEndpoints {
   static const String importUrl = '/api/import';
   static const String importJwc = '/api/import-jwc';
   static String jwcCaptcha(String school) =>
-      '/api/import-jwc/captcha?school=$school';
+      '/api/import-jwc/captcha?school=${Uri.encodeQueryComponent(school)}';
 
   // 课表相关
   static const String timetables = '/api/timetables';
