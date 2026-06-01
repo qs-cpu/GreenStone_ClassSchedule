@@ -26,14 +26,14 @@ class AuthRepository {
     );
   }
 
-  Future<String> login(String username, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await _dio.post(
       ApiEndpoints.login,
       data: {'username': username, 'password': password},
     );
     final data = response.data;
     if (data is Map && data['token'] is String) {
-      return data['token'] as String;
+      return {'token': data['token'], 'user': data['user'] ?? {}};
     }
     throw const FormatException('登录响应缺少 token');
   }

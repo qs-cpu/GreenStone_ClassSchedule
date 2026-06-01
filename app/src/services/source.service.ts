@@ -1,15 +1,22 @@
 import { db, schema } from '../db'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, and } from 'drizzle-orm'
 
 export class SourceService {
-  async findAll() {
-    return db.select().from(schema.timetableSources).execute()
+  async findAll(userId: string) {
+    return db.select().from(schema.timetableSources)
+      .where(eq(schema.timetableSources.userId, userId))
+      .execute()
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const [source] = await db.select().from(schema.timetableSources)
-      .where(eq(schema.timetableSources.id, id))
+      .where(and(
+        eq(schema.timetableSources.id, id),
+        eq(schema.timetableSources.userId, userId)
+      ))
       .execute()
+
+    if (!source) return null
 
     const records = await db.select().from(schema.syncRecords)
       .where(eq(schema.syncRecords.sourceId, id))

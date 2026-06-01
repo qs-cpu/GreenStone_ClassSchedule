@@ -1,15 +1,9 @@
 import { Elysia, t } from 'elysia'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../db'
+import { AuthService } from '../services/auth.service'
 
-async function createToken(userId: string) {
-  const raw = `${userId}:${crypto.randomUUID()}:${Date.now()}`
-  const bytes = new TextEncoder().encode(raw)
-  const digest = await crypto.subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-}
+const authService = new AuthService()
 
 export const authRoutes = new Elysia()
   .group('/api/auth', (app) =>
@@ -84,11 +78,12 @@ export const authRoutes = new Elysia()
             }
 
             return {
-              token: await createToken(user.id),
+              token: await authService.generateToken(user.id),
               user: {
                 id: user.id,
                 username: user.username,
                 nickname: user.nickname,
+                role: user.role,
                 createdAt: user.createdAt,
               },
             }

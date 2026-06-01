@@ -1,11 +1,14 @@
 import { db, schema } from '../db'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import axios from 'axios'
 
 export class SyncService {
-  async syncSource(sourceId: string) {
+  async syncSource(sourceId: string, userId: string) {
     const [source] = await db.select().from(schema.timetableSources)
-      .where(eq(schema.timetableSources.id, sourceId))
+      .where(and(
+        eq(schema.timetableSources.id, sourceId),
+        eq(schema.timetableSources.userId, userId)
+      ))
       .execute()
 
     if (!source) {

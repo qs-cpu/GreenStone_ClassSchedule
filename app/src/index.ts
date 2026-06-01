@@ -5,6 +5,7 @@ import { importRoutes } from './routes/import'
 import { sourceRoutes } from './routes/source'
 import { importJwcRoutes } from './routes/import-jwc'
 import { authRoutes } from './routes/auth'
+import { adminUserRoutes } from './routes/admin/users'
 
 const app = new Elysia()
   .use(cors())
@@ -13,6 +14,7 @@ const app = new Elysia()
   .use(importRoutes)
   .use(sourceRoutes)
   .use(importJwcRoutes)
+  .use(adminUserRoutes)
   .get('/', () => 'GreenStone API')
   .listen(3001)
 

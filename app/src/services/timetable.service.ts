@@ -1,17 +1,23 @@
 import { db, schema } from '../db'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, and } from 'drizzle-orm'
 
 export class TimetableService {
-  async findAll() {
+  async findAll(userId: string) {
     return db.select().from(schema.timetables)
+      .where(eq(schema.timetables.userId, userId))
       .orderBy(desc(schema.timetables.createdAt))
       .execute()
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const timetable = await db.select().from(schema.timetables)
-      .where(eq(schema.timetables.id, id))
+      .where(and(
+        eq(schema.timetables.id, id),
+        eq(schema.timetables.userId, userId)
+      ))
       .execute()
+
+    if (!timetable[0]) return null
 
     const courses = await db.select().from(schema.courses)
       .where(eq(schema.courses.timetableId, id))
@@ -41,8 +47,8 @@ export class TimetableService {
     return { ...timetable[0], courses: coursesWithSessions }
   }
 
-  async getWeekView(id: string, weekNo: number) {
-    const timetable = await this.findOne(id)
+  async getWeekView(id: string, weekNo: number, userId: string) {
+    const timetable = await this.findOne(id, userId)
     if (!timetable) return null
 
     const courses = timetable.courses.filter((c) =>
@@ -65,8 +71,8 @@ export class TimetableService {
     return weekData
   }
 
-  async getDayView(id: string, date: Date) {
-    const timetable = await this.findOne(id)
+  async getDayView(id: string, date: Date, userId: string) {
+    const timetable = await this.findOne(id, userId)
     if (!timetable) return null
 
     const weekday = date.getDay() || 7

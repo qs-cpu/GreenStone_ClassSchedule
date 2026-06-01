@@ -3,6 +3,7 @@ import { schools } from '../parsers/schools'
 import { FdzcFetcher } from '../parsers/schools/fdzc.fetcher'
 import { db, schema } from '../db'
 import { Buffer } from 'node:buffer'
+import { getUserFromRequest } from '../middleware/auth'
 
 const CAPTCHA_TTL_MS = 5 * 60 * 1000
 const captchaSessions = new Map<string, { fetcher: FdzcFetcher; createdAt: number }>()
@@ -29,36 +30,23 @@ function createSchoolFetcher(school: string) {
   return null
 }
 
-async function resolveImportOwner(userId: string | undefined, termId: string | undefined, year: number, semester: string) {
-  if (userId && termId) {
+async function resolveImportOwner(userId: string, termId: string | undefined, year: number, semester: string) {
+  const normalizedSemester = normalizeSemester(semester)
+  const termName = `${year}年${normalizedSemester}`
+
+  if (termId) {
     return { userId, termId }
   }
 
-  const username = 'default-import-user'
-  let user = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.username, username),
-  })
-
-  if (!user) {
-    ;[user] = await db.insert(schema.users)
-      .values({
-        username,
-        nickname: '默认导入用户',
-      })
-      .returning()
-  }
-
-  const normalizedSemester = normalizeSemester(semester)
-  const termName = `${year}年${normalizedSemester}`
   const existingTerms = await db.select().from(schema.terms)
-  let term = existingTerms.find((item) => item.userId === user.id && item.name === termName)
+  let term = existingTerms.find((item) => item.userId === userId && item.name === termName)
 
   if (!term) {
     const startDate = normalizedSemester === '上' ? new Date(`${year}-09-01`) : new Date(`${year}-02-20`)
     const endDate = normalizedSemester === '上' ? new Date(`${year + 1}-01-20`) : new Date(`${year}-07-10`)
     ;[term] = await db.insert(schema.terms)
       .values({
-        userId: user.id,
+        userId: userId,
         name: termName,
         startDate,
         endDate,
@@ -66,7 +54,7 @@ async function resolveImportOwner(userId: string | undefined, termId: string | u
       .returning()
   }
 
-  return { userId: user.id, termId: term.id }
+  return { userId: userId, termId: term.id }
 }
 
 export const importJwcRoutes = new Elysia()
@@ -106,15 +94,19 @@ export const importJwcRoutes = new Elysia()
     )
     .post(
       '/',
-      async ({ body, set }) => {
-        const { school, username, password, year, semester, userId, termId, captchaId, captcha } = body as {
+      async ({ body, request, set }) => {
+        const user = await getUserFromRequest(request)
+        if (!user) {
+          set.status = 401
+          return { error: '未授权，请先登录' }
+        }
+
+        const { school, username, password, year, semester, captchaId, captcha } = body as {
           school: string
           username: string
           password: string
           year: number
           semester: string
-          userId?: string
-          termId?: string
           captchaId?: string
           captcha?: string
         }
@@ -145,7 +137,7 @@ export const importJwcRoutes = new Elysia()
 
           const courses = await activeFetcher.fetchTimetable(year, normalizedSemester)
           const beginDate = await activeFetcher.fetchBeginDate(year, normalizedSemester)
-          const owner = await resolveImportOwner(userId, termId, year, normalizedSemester)
+          const owner = await resolveImportOwner(user.userId, undefined, year, normalizedSemester)
 
           const [timetable] = await db.insert(schema.timetables)
             .values({
@@ -207,8 +199,6 @@ export const importJwcRoutes = new Elysia()
       {
         body: t.Object({
           school: t.String(),
-          userId: t.Optional(t.String()),
-          termId: t.Optional(t.String()),
           username: t.String(),
           password: t.String(),
           year: t.Number(),

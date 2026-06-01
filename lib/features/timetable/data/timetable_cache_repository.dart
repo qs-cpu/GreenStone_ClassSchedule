@@ -10,20 +10,23 @@ final timetableCacheRepositoryProvider = Provider<TimetableCacheRepository>((
   ref,
 ) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return TimetableCacheRepository(prefs);
+  final userId = ref.watch(userInfoProvider)?.id;
+  return TimetableCacheRepository(prefs, userId);
 });
 
 class TimetableCacheRepository {
-  TimetableCacheRepository(this._prefs);
+  TimetableCacheRepository(this._prefs, this._userId);
 
   final SharedPreferences _prefs;
+  final String? _userId;
 
   static const _prefix = 'offline_timetable';
-  static const _listKey = '$_prefix:list';
-  static const _selectedIdKey = '$_prefix:selected_id';
-  static const _updatedAtKey = '$_prefix:updated_at';
 
-  String _detailKey(String id) => '$_prefix:detail:$id';
+  String get _scope => _userId ?? 'anonymous';
+  String get _listKey => '$_prefix:$_scope:list';
+  String get _selectedIdKey => '$_prefix:$_scope:selected_id';
+  String get _updatedAtKey => '$_prefix:$_scope:updated_at';
+  String _detailKey(String id) => '$_prefix:$_scope:detail:$id';
 
   String? getSelectedTimetableId() => _prefs.getString(_selectedIdKey);
 
@@ -97,5 +100,11 @@ class TimetableCacheRepository {
 
   Future<void> _touch() async {
     await _prefs.setString(_updatedAtKey, DateTime.now().toIso8601String());
+  }
+
+  Future<void> clearCurrentUserCache() async {
+    final scopedPrefix = '$_prefix:$_scope:';
+    final keys = _prefs.getKeys().where((key) => key.startsWith(scopedPrefix));
+    await Future.wait(keys.map(_prefs.remove));
   }
 }

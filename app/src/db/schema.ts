@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, integer, varchar, uuid, pgEnum } from 'drizzl
 import { relations } from 'drizzle-orm'
 
 export const weekTypeEnum = pgEnum('week_type', ['all', 'odd', 'even'])
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
 
 // 用户
 export const users = pgTable('users', {
@@ -9,6 +10,7 @@ export const users = pgTable('users', {
   username: varchar('username', { length: 50 }).notNull().unique(),
   passwordHash: text('password_hash'),
   nickname: varchar('nickname', { length: 100 }),
+  role: userRoleEnum('role').default('user').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })

@@ -8,6 +8,7 @@ import '../data/timetable_cache_repository.dart';
 import '../domain/course.dart';
 import '../domain/course_session.dart';
 import '../domain/timetable.dart';
+import '../../auth/application/auth_provider.dart';
 
 // 用于控制日视图与周视图的切换
 final isDayViewProvider = StateProvider<bool>((ref) => false);
@@ -36,6 +37,7 @@ class TimetableHomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(currentTimetableDetailProvider);
     final timetablesAsync = ref.watch(timetablesProvider);
+    final userInfo = ref.watch(userInfoProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,6 +50,17 @@ class TimetableHomePage extends ConsumerWidget {
           error: (error, stackTrace) => const Text('加载失败'),
         ),
         actions: [
+          if (userInfo?.isAdmin == true)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () => context.go('/admin'),
+              tooltip: '管理后台',
+            ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _showLogoutDialog(context, ref),
+            tooltip: '退出登录',
+          ),
           timetablesAsync.when(
             data: (timetables) => PopupMenuButton<String>(
               icon: const Icon(Icons.calendar_month),
@@ -222,7 +235,9 @@ class TimetableHomePage extends ConsumerWidget {
                 final dayColumnWidth = isDayView
                     ? math.max(
                         _minWeekDayWidth,
-                        constraints.maxWidth - _timeColumnWidth - sidePanelWidth,
+                        constraints.maxWidth -
+                            _timeColumnWidth -
+                            sidePanelWidth,
                       )
                     : _minWeekDayWidth;
                 final gridWidth = dayColumnWidth * (isDayView ? 1 : 7);
@@ -232,7 +247,10 @@ class TimetableHomePage extends ConsumerWidget {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
-                      width: math.max(constraints.maxWidth - sidePanelWidth, contentWidth),
+                      width: math.max(
+                        constraints.maxWidth - sidePanelWidth,
+                        contentWidth,
+                      ),
                       child: Column(
                         children: [
                           _buildWeekDaysHeader(
@@ -319,17 +337,15 @@ class TimetableHomePage extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: isSidePanel 
-          ? EdgeInsets.zero 
+      padding: isSidePanel
+          ? EdgeInsets.zero
           : const EdgeInsets.fromLTRB(16, 12, 16, 88),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '未安排具体节次的课程',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: isSidePanel ? 14 : 16,
             ),
@@ -781,6 +797,30 @@ class TimetableHomePage extends ConsumerWidget {
       ),
     );
   }
+
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('退出登录'),
+        content: const Text('确定要退出登录吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(authStateProvider.notifier).logout();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('退出'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class WeatherCard extends StatefulWidget {
@@ -849,7 +889,9 @@ class _WeatherCardState extends State<WeatherCard> {
         border: Border.all(color: _selectedWeather['borderColor'], width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: (_selectedWeather['iconColor'] as Color).withValues(alpha: 0.1),
+            color: (_selectedWeather['iconColor'] as Color).withValues(
+              alpha: 0.1,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

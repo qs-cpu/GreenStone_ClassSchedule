@@ -84,4 +84,9 @@ class ApiEndpoints {
   static const String sources = '/api/sources';
   static String sourceDetail(String id) => '/api/sources/$id';
   static String sourceSync(String id) => '/api/sources/$id/sync';
+
+  // 管理员相关
+  static const String adminUsers = '/api/admin/users';
+  static String adminUserDetail(String id) => '/api/admin/users/$id';
+  static const String adminUserStats = '/api/admin/users/stats/overview';
 }

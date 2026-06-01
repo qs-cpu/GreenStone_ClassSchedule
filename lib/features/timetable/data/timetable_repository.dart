@@ -31,6 +31,9 @@ class TimetableRepository {
       await _cache.cacheTimetables(timetables);
       return timetables;
     } catch (error) {
+      if (error is DioException && error.response?.statusCode != null) {
+        rethrow;
+      }
       final cached = _cache.getTimetables();
       if (cached.isNotEmpty) return cached;
       rethrow;
@@ -49,6 +52,9 @@ class TimetableRepository {
       await _cache.setSelectedTimetableId(timetable.id);
       return timetable;
     } catch (error) {
+      if (error is DioException && error.response?.statusCode != null) {
+        rethrow;
+      }
       final cached = _cache.getTimetableDetail(id);
       if (cached != null) return cached;
       rethrow;

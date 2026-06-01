@@ -7,6 +7,8 @@ import '../../features/source/presentation/source_detail_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
 import '../../features/auth/application/auth_provider.dart';
+import '../../features/admin/presentation/admin_home_page.dart';
+import '../../features/admin/presentation/admin_user_list_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final token = ref.watch(tokenProvider);
@@ -52,6 +54,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final id = state.pathParameters['id']!;
               return SourceDetailPage(sourceId: id);
             },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminHomePage(),
+        routes: [
+          GoRoute(
+            path: 'users',
+            builder: (context, state) => const AdminUserListPage(),
           ),
         ],
       ),

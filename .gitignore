@@ -60,3 +60,7 @@ app/data/
 
 # doc
 /doc
+
+# AI 配置和计划文档
+AGENTS.md
+ADMIN_PLAN.md

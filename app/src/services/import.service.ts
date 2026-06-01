@@ -8,7 +8,7 @@ import { validateUrl } from '../utils/url.validator'
 export class ImportService {
   private importers = [new IcsImporter(), new JsonImporter()]
 
-  async import(url: string, termId?: string) {
+  async import(url: string, userId: string, termId?: string) {
     // 1. 校验 URL
     const validatedUrl = await validateUrl(url)
 
@@ -34,7 +34,7 @@ export class ImportService {
     // 6. 保存到数据库
     const [timetable] = await db.insert(schema.timetables)
       .values({
-        userId: 'default-user',
+        userId: userId,
         termId: termId || 'default-term',
         title: parsed.title,
       })
@@ -84,7 +84,7 @@ export class ImportService {
       await db.insert(schema.timetableSources)
         .values({
           id: timetable.sourceId,
-          userId: 'default-user',
+          userId: userId,
           originalUrl: validatedUrl,
           sourceType,
           importerKey: importer.constructor.name,

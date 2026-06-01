@@ -86,6 +86,14 @@ db-stop:
 db-migrate:
   cd app && DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/greenstone" bun run drizzle-kit push --config drizzle.config.ts
 
+# 创建管理员账号（如已存在则跳过）
+db-seed-admin:
+  cd app && DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/greenstone" bun run src/seed-admin.ts
+
+# 数据库迁移并创建管理员
+db-setup: db-migrate db-seed-admin
+  echo "数据库迁移和管理员创建完成"
+
 # 数据库 Shell
 db-shell:
   docker exec -it greenstone-db psql -U postgres -d greenstone
@@ -105,4 +113,11 @@ redis-stop:
 start:
   just db-start
   just redis-start
+  cd app && bun run dev
+
+# 完整部署（启动数据库 + 迁移 + 创建管理员 + 启动后端）
+deploy:
+  just db-start
+  just redis-start
+  just db-setup
   cd app && bun run dev

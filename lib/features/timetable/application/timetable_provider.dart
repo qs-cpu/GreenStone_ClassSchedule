@@ -5,7 +5,7 @@ import '../domain/timetable.dart';
 
 // 提供所有的课表列表
 final timetablesProvider = FutureProvider<List<Timetable>>((ref) async {
-  final repo = ref.read(timetableRepositoryProvider);
+  final repo = ref.watch(timetableRepositoryProvider);
   return await repo.getTimetables();
 });
 
@@ -17,7 +17,7 @@ final selectedTimetableIdProvider = StateProvider<String?>((ref) {
 // 当前选中的课表详情数据 (根据选中的 ID 自动拉取详情)
 final currentTimetableDetailProvider = FutureProvider<Timetable?>((ref) async {
   final selectedId = ref.watch(selectedTimetableIdProvider);
-  final repo = ref.read(timetableRepositoryProvider);
+  final repo = ref.watch(timetableRepositoryProvider);
 
   if (selectedId == null) {
     // 如果没有选中，尝试拉取列表里的第一个作为默认
