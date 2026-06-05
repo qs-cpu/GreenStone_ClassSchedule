@@ -1,0 +1,10 @@
+.git
+.dart_tool
+build
+coverage
+android/.gradle
+app/node_modules
+app/data
+app/.env
+node_modules
+*.log

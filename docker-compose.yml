@@ -1,0 +1,21 @@
+services:
+  greenstone:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: greenstone-classschedule:latest
+    container_name: greenstone
+    restart: unless-stopped
+    ports:
+      - "8080:3001"
+    environment:
+      POSTGRES_DB: greenstone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-GsPg_2026_f7K9mQ2xV8pL4zR3}
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+    volumes:
+      - greenstone-data:/data
+
+volumes:
+  greenstone-data:

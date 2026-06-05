@@ -33,7 +33,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('登录')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
