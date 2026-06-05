@@ -9,6 +9,7 @@ import '../domain/course.dart';
 import '../domain/course_session.dart';
 import '../domain/timetable.dart';
 import '../../auth/application/auth_provider.dart';
+import 'widgets/ink_dino_game.dart';
 
 // 用于控制日视图与周视图的切换
 final isDayViewProvider = StateProvider<bool>((ref) => false);
@@ -269,6 +270,18 @@ class TimetableHomePage extends ConsumerWidget {
                                   isDayView,
                                 ),
                               ),
+                              if (constraints.maxWidth - sidePanelWidth >
+                                  contentWidth)
+                                SizedBox(
+                                  width:
+                                      constraints.maxWidth -
+                                      sidePanelWidth -
+                                      contentWidth,
+                                  height: hasScheduledCourses
+                                      ? _sectionHeight * 12.0
+                                      : _sectionHeight * 4.0,
+                                  child: const InkDinoGame(),
+                                ),
                             ],
                           ),
                           if (unscheduledCourses.isNotEmpty && !isWideScreen)
