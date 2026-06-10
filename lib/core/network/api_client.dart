@@ -6,29 +6,32 @@ import '../../features/auth/application/auth_provider.dart';
 String _defaultBaseUrl() {
   // --dart-define=API_URL=... overrides everything
   const envUrl = String.fromEnvironment('API_URL');
+
+  // Explicitly empty means Docker/same-origin: use relative paths
+  // (distinct from "not set" which means use host detection)
+  const isSameOrigin = bool.fromEnvironment('SAME_ORIGIN_API');
+
   if (envUrl.isNotEmpty) return envUrl;
 
+  if (kIsWeb && isSameOrigin) {
+    return ''; // relative paths like /api/auth/login
+  }
+
   if (kIsWeb) {
-    // Use same host as the current page, port 3001.
-    // This works whether you access via localhost, 192.168.x.x, or a domain.
     final host = Uri.base.host;
     return 'http://$host:3001';
   }
 
-  // Android emulator → host machine's localhost
   return 'http://10.0.2.2:3001';
 }
 
 final dioProvider = Provider<Dio>((ref) {
   final baseUrl = _defaultBaseUrl();
-  const allowInsecureApi = bool.fromEnvironment(
-    'ALLOW_INSECURE_API',
-    defaultValue: kDebugMode,
-  );
 
-  if (!allowInsecureApi && baseUrl.startsWith('http://')) {
+  // Release builds only need to check when baseUrl is an absolute HTTP URL
+  if (!kDebugMode && baseUrl.startsWith('http://')) {
     throw StateError(
-      'Release API_URL must use HTTPS, or set ALLOW_INSECURE_API=true.',
+      'Release API_URL must use HTTPS, or build with --dart-define=SAME_ORIGIN_API=true for Docker.',
     );
   }
 
@@ -41,7 +44,6 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  // 认证拦截器：自动注入 Bearer Token
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
