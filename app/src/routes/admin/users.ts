@@ -122,7 +122,7 @@ export const adminUserRoutes = new Elysia()
             }
 
             const updateData: any = {
-              updatedAt: new Date(),
+              updatedAt: new Date().toISOString(),
             }
 
             if (nickname !== undefined) updateData.nickname = nickname

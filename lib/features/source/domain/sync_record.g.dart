@@ -2,31 +2,25 @@
 
 part of 'sync_record.dart';
 
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
 _SyncRecord _$SyncRecordFromJson(Map<String, dynamic> json) => _SyncRecord(
-  id: json['id'] as String,
-  sourceId: json['sourceId'] as String,
-  status: json['status'] as String,
-  message: json['message'] as String?,
-  startedAt: DateTime.parse(json['startedAt'] as String),
-  finishedAt: json['finishedAt'] == null
-      ? null
-      : DateTime.parse(json['finishedAt'] as String),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  id: (json['id'] ?? '').toString(),
+  sourceId: (json['source_id'] ?? json['sourceId'] ?? '').toString(),
+  status: (json['status'] ?? '').toString(),
+  message: json['message']?.toString(),
+  startedAt: _parseDate(json['started_at'] ?? json['startedAt'] ?? ''),
+  finishedAt: _parseDateOrNull(json['finished_at'] ?? json['finishedAt']),
+  createdAt: _parseDate(json['created_at'] ?? json['createdAt'] ?? ''),
+  updatedAt: _parseDate(json['updated_at'] ?? json['updatedAt'] ?? ''),
 );
 
 Map<String, dynamic> _$SyncRecordToJson(_SyncRecord instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'sourceId': instance.sourceId,
+      'source_id': instance.sourceId,
       'status': instance.status,
       'message': instance.message,
-      'startedAt': instance.startedAt.toIso8601String(),
-      'finishedAt': instance.finishedAt?.toIso8601String(),
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'started_at': instance.startedAt.toIso8601String(),
+      'finished_at': instance.finishedAt?.toIso8601String(),
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
     };

@@ -18,7 +18,7 @@ async function seedAdmin() {
   if (existing) {
     if (existing.role !== 'admin') {
       await db.update(schema.users)
-        .set({ role: 'admin', updatedAt: new Date() })
+        .set({ role: 'admin', updatedAt: new Date().toISOString() })
         .where(eq(schema.users.id, existing.id))
       console.log(`用户 ${username} 已升级为管理员`)
     } else {

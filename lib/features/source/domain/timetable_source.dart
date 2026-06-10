@@ -4,6 +4,23 @@ import 'sync_record.dart';
 part 'timetable_source.freezed.dart';
 part 'timetable_source.g.dart';
 
+DateTime _parseDate(dynamic v) {
+  try {
+    return DateTime.parse(v.toString());
+  } catch (_) {
+    return DateTime.now();
+  }
+}
+
+DateTime? _parseDateOrNull(dynamic v) {
+  if (v == null) return null;
+  try {
+    return DateTime.parse(v.toString());
+  } catch (_) {
+    return null;
+  }
+}
+
 @freezed
 abstract class TimetableSource with _$TimetableSource {
   const factory TimetableSource({

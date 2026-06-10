@@ -42,8 +42,8 @@ async function resolveImportOwner(userId: string, termId: string | undefined, ye
   let term = existingTerms.find((item) => item.userId === userId && item.name === termName)
 
   if (!term) {
-    const startDate = normalizedSemester === '上' ? new Date(`${year}-09-01`) : new Date(`${year}-02-20`)
-    const endDate = normalizedSemester === '上' ? new Date(`${year + 1}-01-20`) : new Date(`${year}-07-10`)
+    const startDate = (normalizedSemester === '上' ? `${year}-09-01` : `${year}-02-20`) + 'T00:00:00.000Z'
+    const endDate = (normalizedSemester === '上' ? `${year + 1}-01-20` : `${year}-07-10`) + 'T00:00:00.000Z'
     ;[term] = await db.insert(schema.terms)
       .values({
         userId: userId,

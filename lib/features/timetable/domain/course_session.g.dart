@@ -2,38 +2,34 @@
 
 part of 'course_session.dart';
 
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
 _CourseSession _$CourseSessionFromJson(Map<String, dynamic> json) =>
     _CourseSession(
-      id: json['id'] as String,
-      courseId: json['courseId'] as String,
-      weekday: (json['weekday'] as num).toInt(),
-      startSection: (json['startSection'] as num).toInt(),
-      endSection: (json['endSection'] as num).toInt(),
-      startWeek: (json['startWeek'] as num).toInt(),
-      endWeek: (json['endWeek'] as num).toInt(),
-      weekType: json['weekType'] as String,
-      location: json['location'] as String?,
-      note: json['note'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      id: (json['id'] ?? '').toString(),
+      courseId: (json['course_id'] ?? json['courseId'] ?? '').toString(),
+      weekday: int.tryParse((json['weekday'] ?? '').toString()) ?? 1,
+      startSection: int.tryParse((json['start_section'] ?? json['startSection'] ?? '').toString()) ?? 1,
+      endSection: int.tryParse((json['end_section'] ?? json['endSection'] ?? '').toString()) ?? 2,
+      startWeek: int.tryParse((json['start_week'] ?? json['startWeek'] ?? '').toString()) ?? 1,
+      endWeek: int.tryParse((json['end_week'] ?? json['endWeek'] ?? '').toString()) ?? 20,
+      weekType: (json['week_type'] ?? json['weekType'] ?? 'all').toString(),
+      location: json['location']?.toString(),
+      note: json['note']?.toString(),
+      createdAt: _parseDate(json['created_at'] ?? json['createdAt'] ?? ''),
+      updatedAt: _parseDate(json['updated_at'] ?? json['updatedAt'] ?? ''),
     );
 
 Map<String, dynamic> _$CourseSessionToJson(_CourseSession instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'courseId': instance.courseId,
+      'course_id': instance.courseId,
       'weekday': instance.weekday,
-      'startSection': instance.startSection,
-      'endSection': instance.endSection,
-      'startWeek': instance.startWeek,
-      'endWeek': instance.endWeek,
-      'weekType': instance.weekType,
+      'start_section': instance.startSection,
+      'end_section': instance.endSection,
+      'start_week': instance.startWeek,
+      'end_week': instance.endWeek,
+      'week_type': instance.weekType,
       'location': instance.location,
       'note': instance.note,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
     };

@@ -4,6 +4,14 @@ import 'course_session.dart';
 part 'course.freezed.dart';
 part 'course.g.dart';
 
+DateTime _parseDate(dynamic v) {
+  try {
+    return DateTime.parse(v.toString());
+  } catch (_) {
+    return DateTime.now();
+  }
+}
+
 @freezed
 abstract class Course with _$Course {
   const factory Course({

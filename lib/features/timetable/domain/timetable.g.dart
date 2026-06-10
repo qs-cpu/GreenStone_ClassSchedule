@@ -2,18 +2,14 @@
 
 part of 'timetable.dart';
 
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
 _Timetable _$TimetableFromJson(Map<String, dynamic> json) => _Timetable(
-  id: json['id'] as String,
-  userId: json['userId'] as String,
-  termId: json['termId'] as String,
-  title: json['title'] as String,
-  sourceId: json['sourceId'] as String?,
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  id: (json['id'] ?? json['userId'] ?? '').toString(),
+  userId: (json['user_id'] ?? json['userId'] ?? '').toString(),
+  termId: (json['term_id'] ?? json['termId'] ?? '').toString(),
+  title: (json['title'] ?? '').toString(),
+  sourceId: json['source_id']?.toString() ?? json['sourceId']?.toString(),
+  createdAt: _parseDate(json['created_at'] ?? json['createdAt'] ?? ''),
+  updatedAt: _parseDate(json['updated_at'] ?? json['updatedAt'] ?? ''),
   courses:
       (json['courses'] as List<dynamic>?)
           ?.map((e) => Course.fromJson(e as Map<String, dynamic>))
@@ -24,11 +20,11 @@ _Timetable _$TimetableFromJson(Map<String, dynamic> json) => _Timetable(
 Map<String, dynamic> _$TimetableToJson(_Timetable instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'userId': instance.userId,
-      'termId': instance.termId,
+      'user_id': instance.userId,
+      'term_id': instance.termId,
       'title': instance.title,
-      'sourceId': instance.sourceId,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'source_id': instance.sourceId,
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
       'courses': instance.courses,
     };

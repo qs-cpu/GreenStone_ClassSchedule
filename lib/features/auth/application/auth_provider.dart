@@ -6,7 +6,10 @@ import '../data/auth_repository.dart';
 import 'package:dio/dio.dart';
 
 String _authErrorMessage(Object error, String fallback) {
-  if (error is! DioException) return fallback;
+  if (error is! DioException) {
+    print('[AUTH] non-Dio error: $error');
+    return error.toString().isNotEmpty ? error.toString() : fallback;
+  }
 
   if (error.response?.statusCode == 401) {
     return '用户名或密码错误';
@@ -19,6 +22,7 @@ String _authErrorMessage(Object error, String fallback) {
   if (data is String && data.trim().isNotEmpty) {
     return data;
   }
+  print('[AUTH] Dio error: ${error.type} status=${error.response?.statusCode} msg=${error.message}');
   return error.message ?? fallback;
 }
 
@@ -90,13 +94,19 @@ class TokenNotifier extends StateNotifier<String?> {
     : super(initialToken);
 
   Future<void> setToken(String token) async {
-    await _secureStorage.write(key: _tokenKey, value: token);
-    await _prefs.remove(_tokenKey);
+    try {
+      await _secureStorage.write(key: _tokenKey, value: token);
+    } catch (_) {
+      // Web insecure context: crypto.subtle unavailable, fall back to prefs
+      await _prefs.setString(_tokenKey, token);
+    }
     state = token;
   }
 
   Future<void> clearToken() async {
-    await _secureStorage.delete(key: _tokenKey);
+    try {
+      await _secureStorage.delete(key: _tokenKey);
+    } catch (_) {}
     await _prefs.remove(_tokenKey);
     state = null;
   }

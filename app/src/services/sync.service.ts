@@ -2,6 +2,8 @@ import { db, schema } from '../db'
 import { eq, and } from 'drizzle-orm'
 import axios from 'axios'
 
+function now() { return new Date().toISOString() }
+
 export class SyncService {
   async syncSource(sourceId: string, userId: string) {
     const [source] = await db.select().from(schema.timetableSources)
@@ -17,7 +19,7 @@ export class SyncService {
 
     // 更新状态为 syncing
     await db.update(schema.timetableSources)
-      .set({ syncStatus: 'syncing', updatedAt: new Date() })
+      .set({ syncStatus: 'syncing', updatedAt: now() })
       .where(eq(schema.timetableSources.id, sourceId))
       .execute()
 
@@ -26,7 +28,7 @@ export class SyncService {
       .values({
         sourceId,
         status: 'syncing',
-        startedAt: new Date(),
+        startedAt: now(),
       })
       .returning()
 
@@ -40,10 +42,10 @@ export class SyncService {
       await db.update(schema.timetableSources)
         .set({
           syncStatus: 'success',
-          lastSyncedAt: new Date(),
+          lastSyncedAt: now(),
           etag: response.headers.etag,
           lastModified: response.headers['last-modified'],
-          updatedAt: new Date(),
+          updatedAt: now(),
         })
         .where(eq(schema.timetableSources.id, sourceId))
         .execute()
@@ -52,7 +54,7 @@ export class SyncService {
       await db.update(schema.syncRecords)
         .set({
           status: 'success',
-          finishedAt: new Date(),
+          finishedAt: now(),
         })
         .where(eq(schema.syncRecords.id, record.id))
         .execute()
@@ -65,7 +67,7 @@ export class SyncService {
         .set({
           status: 'failed',
           message: message,
-          finishedAt: new Date(),
+          finishedAt: now(),
         })
         .where(eq(schema.syncRecords.id, record.id))
         .execute()
@@ -74,7 +76,7 @@ export class SyncService {
         .set({
           syncStatus: 'failed',
           errorMessage: message,
-          updatedAt: new Date(),
+          updatedAt: now(),
         })
         .where(eq(schema.timetableSources.id, sourceId))
         .execute()

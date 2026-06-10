@@ -59,14 +59,14 @@ void main() {
       expect(notifier.state, isNull);
     });
 
-    test('setToken removes old key from SharedPreferences', () async {
-      SharedPreferences.setMockInitialValues({'jwt_token': 'old-legacy'});
+    test('clearToken removes token from SharedPreferences', () async {
+      SharedPreferences.setMockInitialValues({'jwt_token': 'stored'});
       final prefs = await SharedPreferences.getInstance();
       final notifier = TokenNotifier(prefs, const FlutterSecureStorage(), null);
 
-      await notifier.setToken('fresh-token');
+      await notifier.clearToken();
       expect(prefs.getString('jwt_token'), isNull);
-      expect(notifier.state, 'fresh-token');
+      expect(notifier.state, isNull);
     });
   });
 }

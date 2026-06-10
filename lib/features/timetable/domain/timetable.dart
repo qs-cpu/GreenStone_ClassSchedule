@@ -4,6 +4,14 @@ import 'course.dart';
 part 'timetable.freezed.dart';
 part 'timetable.g.dart';
 
+DateTime _parseDate(dynamic v) {
+  try {
+    return DateTime.parse(v.toString());
+  } catch (_) {
+    return DateTime.now();
+  }
+}
+
 @freezed
 abstract class Timetable with _$Timetable {
   const factory Timetable({

@@ -5,7 +5,7 @@
 @start:
   #!/usr/bin/env bash
   cd app && bun run dev & FPID=$!
-  flutter run -d web-server &
+  flutter run -d web-server --web-port=45441 &
   trap "kill $FPID 2>/dev/null" EXIT
   wait
 
@@ -13,7 +13,7 @@
   cd app && bun run dev
 
 @web:
-  flutter run -d web-server
+  flutter run -d web-server --web-port=45441
 
 @admin:
   cd app && bun run src/seed-admin.ts
