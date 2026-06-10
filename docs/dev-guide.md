@@ -240,8 +240,7 @@ docker compose down -v && docker compose up -d --build
 
 1. 在 `app/src/parsers/schools/` 创建 `xxx.fetcher.ts`，实现登录 + 抓取
 2. 在 `app/src/parsers/schools/xxx.parser.ts` 中实现 HTML → `ParsedCourse[]`
-3. 在 `app/src/parsers/schools/index.ts` 的 `schools` 注册表添加新学校
-4. 在 `app/src/routes/import-jwc.ts` 的 `createSchoolFetcher()` 中添加分支
+3. 在 `app/src/routes/import-jwc.ts` 的 `createSchoolFetcher()` 中添加分支
 
 ## 添加新导入格式
 

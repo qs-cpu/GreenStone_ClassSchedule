@@ -99,31 +99,24 @@ GreenStone_ClassSchedule/
 │       │   └── admin.ts              # 管理员角色校验
 │       ├── dto/
 │       │   ├── user.dto.ts           # 用户 DTO 转换
-│       │   └── timetable.dto.ts
 │       ├── parsers/
 │       │   ├── importers/
 │       │   │   ├── importer.interface.ts  # ParsedCourse 接口
 │       │   │   ├── ics.importer.ts        # ICS 日历解析
 │       │   │   └── json.importer.ts       # JSON 格式解析
 │       │   ├── schools/
-│       │   │   ├── index.ts               # SchoolFetcher 接口 + 注册表
 │       │   │   ├── fdzc.const.ts          # 福大至诚 教务系统常量
 │       │   │   ├── fdzc.fetcher.ts        # 登录 + 抓取课表
 │       │   │   └── fdzc.parser.ts         # HTML 表格 → ParsedCourse 解析
 │       │   ├── strategies/
-│       │   │   ├── detector.ts            # 内容类型检测 (ICS/JSON/HTML)
-│       │   │   ├── direct.fetcher.ts
-│       │   │   └── proxy.fetcher.ts
+│       │   │   ├── detector.ts            # 内容类型检测 (ICS/JSON)
 │       │   └── utils/
-│       │       ├── captcha.recognizer.ts  # BMP 验证码识别 (XOR 字模匹配)
 │       │       └── http.client.ts         # Cookie 管理 + form-urlencoded
 │       ├── utils/url.validator.ts   # URL 白名单校验
-│       ├── seed.ts                  # 数据库种子脚本
 │       └── seed-admin.ts            # 管理员初始化
 │
-├── android/                          # Android 原生项目
 │   └── app/src/main/kotlin/.../MainActivity.kt
-├── Dockerfile                        # 三阶段：Flutter Web → Bun 依赖 → Pg+Redis+Bun
+├── Dockerfile                        # 三阶段：Flutter Web → Bun 依赖 → Bun + SQLite
 ├── docker-entrypoint.sh              # 容器启动脚本
 ├── Justfile                          # 任务运行器 (init/run/build/db/start)
 ├── pubspec.yaml                      # Flutter 依赖声明
