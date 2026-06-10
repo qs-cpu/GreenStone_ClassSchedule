@@ -7,6 +7,7 @@ import { sourceRoutes } from './routes/source'
 import { importJwcRoutes } from './routes/import-jwc'
 import { authRoutes } from './routes/auth'
 import { adminUserRoutes } from './routes/admin/users'
+import { config } from './config'
 
 const publicDir = process.env.PUBLIC_DIR || './public'
 
@@ -32,7 +33,7 @@ const app = new Elysia()
   .use(adminUserRoutes)
   .get('/', () => serveWeb('/'))
   .get('/*', ({ path }) => serveWeb(path))
-  .listen(3001)
+  .listen(config.app.port)
 
 console.log(`Server running at ${app.server?.url}`)
 

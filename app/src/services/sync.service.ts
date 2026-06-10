@@ -25,7 +25,7 @@ export class SyncService {
     const [record] = await db.insert(schema.syncRecords)
       .values({
         sourceId,
-        status: 'running',
+        status: 'syncing',
         startedAt: new Date(),
       })
       .returning()

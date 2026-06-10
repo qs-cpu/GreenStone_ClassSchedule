@@ -1,5 +1,5 @@
 import { db, schema } from '../db'
-import { desc, eq, and } from 'drizzle-orm'
+import { desc, eq, and, inArray } from 'drizzle-orm'
 
 export class TimetableService {
   async findAll(userId: string) {
@@ -23,26 +23,43 @@ export class TimetableService {
       .where(eq(schema.courses.timetableId, id))
       .execute()
 
-    const coursesWithSessions = await Promise.all(
-      courses.map(async (course) => {
-        const sessions = await db.select().from(schema.courseSessions)
-          .where(eq(schema.courseSessions.courseId, course.id))
+    if (courses.length === 0) {
+      return { ...timetable[0], courses: [] }
+    }
 
-        const sessionsWithLocations = await Promise.all(
-          sessions.map(async (session) => {
-            const locations = await db.select().from(schema.locations)
-              .where(eq(schema.locations.sessionId, session.id))
+    const courseIds = courses.map(c => c.id)
 
-            return {
-              ...session,
-              location: locations[0]?.locationText ?? null,
-            }
-          })
-        )
+    const sessions = await db.select().from(schema.courseSessions)
+      .where(inArray(schema.courseSessions.courseId, courseIds))
+      .execute()
 
-        return { ...course, sessions: sessionsWithLocations }
-      })
-    )
+    const sessionIds = sessions.map(s => s.id)
+
+    const locations = sessionIds.length > 0
+      ? await db.select().from(schema.locations)
+          .where(inArray(schema.locations.sessionId, sessionIds))
+          .execute()
+      : []
+
+    const locationBySession = new Map<string, string | null>()
+    for (const loc of locations) {
+      locationBySession.set(loc.sessionId, loc.locationText)
+    }
+
+    const sessionsByCourse = new Map<string, typeof sessions>()
+    for (const s of sessions) {
+      const list = sessionsByCourse.get(s.courseId) ?? []
+      list.push(s)
+      sessionsByCourse.set(s.courseId, list)
+    }
+
+    const coursesWithSessions = courses.map(course => ({
+      ...course,
+      sessions: (sessionsByCourse.get(course.id) ?? []).map(s => ({
+        ...s,
+        location: locationBySession.get(s.id) ?? null,
+      })),
+    }))
 
     return { ...timetable[0], courses: coursesWithSessions }
   }

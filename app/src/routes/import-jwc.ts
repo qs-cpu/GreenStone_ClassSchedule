@@ -1,9 +1,9 @@
 import { Elysia, t } from 'elysia'
-import { schools } from '../parsers/schools'
 import { FdzcFetcher } from '../parsers/schools/fdzc.fetcher'
 import { db, schema } from '../db'
 import { Buffer } from 'node:buffer'
 import { getUserFromRequest } from '../middleware/auth'
+import { insertCourses } from '../services/timetable-writer'
 
 const CAPTCHA_TTL_MS = 5 * 60 * 1000
 const captchaSessions = new Map<string, { fetcher: FdzcFetcher; createdAt: number }>()
@@ -100,8 +100,7 @@ export const importJwcRoutes = new Elysia()
           return { error: '未授权，请先登录' }
         }
 
-        const { school, username, password, year, semester, captchaId, captcha } = body as {
-          school: string
+        const { username, password, year, semester, captchaId, captcha } = body as {
           username: string
           password: string
           year: number
@@ -110,33 +109,26 @@ export const importJwcRoutes = new Elysia()
           captcha?: string
         }
 
-        const fetcher = schools[school]
-        if (!fetcher) {
-          set.status = 400
-          return { error: `Unsupported school: ${school}` }
-        }
-
         try {
-          let activeFetcher = fetcher
           const normalizedSemester = normalizeSemester(semester)
 
-          if (captchaId && captcha) {
-            const session = captchaSessions.get(captchaId)
-            if (!session) {
-              set.status = 400
-              return { error: '验证码已过期，请刷新验证码后重试' }
-            }
-
-            activeFetcher = session.fetcher
-            await session.fetcher.loginWithCaptcha(username, password, captcha)
-            captchaSessions.delete(captchaId)
-          } else {
+          if (!captchaId || !captcha) {
             set.status = 400
             return { error: '请先获取验证码' }
           }
 
-          const courses = await activeFetcher.fetchTimetable(year, normalizedSemester)
-          const beginDate = await activeFetcher.fetchBeginDate(year, normalizedSemester)
+          const session = captchaSessions.get(captchaId)
+          if (!session) {
+            set.status = 400
+            return { error: '验证码已过期，请刷新验证码后重试' }
+          }
+
+          await session.fetcher.loginWithCaptcha(username, password, captcha)
+          captchaSessions.delete(captchaId)
+
+          const fetcher = session.fetcher
+          const courses = await fetcher.fetchTimetable(year, normalizedSemester)
+          const beginDate = await fetcher.fetchBeginDate(year, normalizedSemester)
           const owner = await resolveImportOwner(user.userId, undefined, year, normalizedSemester)
 
           const [timetable] = await db.insert(schema.timetables)
@@ -147,47 +139,12 @@ export const importJwcRoutes = new Elysia()
             })
             .returning()
 
-          for (const c of courses) {
-            const [course] = await db.insert(schema.courses)
-              .values({
-                timetableId: timetable.id,
-                title: c.title,
-                teacher: c.teacher,
-              })
-              .returning()
-
-            for (const s of c.sessions) {
-              const weekType = ['all', 'odd', 'even'].includes(s.weekType ?? '')
-                ? s.weekType as 'all' | 'odd' | 'even'
-                : 'all'
-
-              const [session] = await db.insert(schema.courseSessions)
-                .values({
-                  courseId: course.id,
-                  weekday: s.weekday,
-                  startSection: s.startSection,
-                  endSection: s.endSection,
-                  startWeek: s.startWeek,
-                  endWeek: s.endWeek,
-                  weekType,
-                })
-                .returning()
-
-              if (s.location) {
-                await db.insert(schema.locations)
-                  .values({
-                    sessionId: session.id,
-                    locationText: s.location,
-                  })
-                  .execute()
-              }
-            }
-          }
+          const coursesCount = await insertCourses(timetable.id, courses)
 
           set.status = 201
           return {
             timetable,
-            coursesCount: courses.length,
+            coursesCount,
             beginDate,
           }
         } catch (error) {
@@ -198,7 +155,6 @@ export const importJwcRoutes = new Elysia()
       },
       {
         body: t.Object({
-          school: t.String(),
           username: t.String(),
           password: t.String(),
           year: t.Number(),

@@ -1,6 +1,5 @@
 import { Elysia, t } from 'elysia'
 import { ImportService } from '../services/import.service'
-import { validateUrl } from '../utils/url.validator'
 import { getUserFromRequest } from '../middleware/auth'
 
 export const importRoutes = new Elysia()
@@ -15,9 +14,7 @@ export const importRoutes = new Elysia()
         }
 
         const { url, termId } = body as { url: string; termId?: string }
-
-        const validatedUrl = await validateUrl(url)
-        const result = await new ImportService().import(validatedUrl, user.userId, termId)
+        const result = await new ImportService().import(url, user.userId, termId)
         
         set.status = 201
         return result
