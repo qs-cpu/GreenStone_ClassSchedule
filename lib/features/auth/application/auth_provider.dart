@@ -65,7 +65,6 @@ final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
 });
 
 final initialTokenProvider = Provider<String?>((ref) => null);
-final initialUserProvider = Provider<UserInfo?>((ref) => null);
 
 // 管理全局 Token 的 Provider
 final tokenProvider = StateNotifierProvider<TokenNotifier, String?>((ref) {
