@@ -1,12 +1,3 @@
-function requireEnv(key: string): string {
-  const value = process.env[key]
-  if (!value) {
-    console.error(`FATAL: environment variable ${key} is required`)
-    process.exit(1)
-  }
-  return value
-}
-
 const jwtSecret = process.env.JWT_SECRET
 if (!jwtSecret || jwtSecret === 'greenstone-secret-key') {
   console.error(
@@ -19,11 +10,7 @@ if (!jwtSecret || jwtSecret === 'greenstone-secret-key') {
 
 export const config = {
   database: {
-    url: requireEnv('DATABASE_URL'),
-  },
-  redis: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
+    path: process.env.DATABASE_PATH || 'data/greenstone.db',
   },
   app: {
     port: parseInt(process.env.PORT || '3001'),

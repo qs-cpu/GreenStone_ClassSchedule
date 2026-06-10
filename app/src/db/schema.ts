@@ -1,120 +1,117 @@
-import { pgTable, text, timestamp, integer, varchar, uuid, pgEnum } from 'drizzle-orm/pg-core'
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 import { relations } from 'drizzle-orm'
 
-export const weekTypeEnum = pgEnum('week_type', ['all', 'odd', 'even'])
-export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
-
 // 用户
-export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  username: varchar('username', { length: 50 }).notNull().unique(),
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  username: text('username', { length: 50 }).notNull().unique(),
   passwordHash: text('password_hash'),
-  nickname: varchar('nickname', { length: 100 }),
-  role: userRoleEnum('role').default('user').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  nickname: text('nickname', { length: 100 }),
+  role: text('role', { enum: ['user', 'admin'] }).default('user').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 学期
-export const terms = pgTable('terms', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
-  name: varchar('name', { length: 100 }).notNull(),
-  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
-  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
+export const terms = sqliteTable('terms', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').references(() => users.id).notNull(),
+  name: text('name', { length: 100 }).notNull(),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
   totalWeeks: integer('total_weeks').default(20).notNull(),
-  timezone: varchar('timezone', { length: 50 }).default('Asia/Shanghai').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  timezone: text('timezone', { length: 50 }).default('Asia/Shanghai').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 节次时间
-export const timeSlots = pgTable('time_slots', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  termId: uuid('term_id').references(() => terms.id).notNull(),
+export const timeSlots = sqliteTable('time_slots', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  termId: text('term_id').references(() => terms.id).notNull(),
   sectionIndex: integer('section_index').notNull(),
-  startTime: varchar('start_time', { length: 10 }).notNull(),
-  endTime: varchar('end_time', { length: 10 }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  startTime: text('start_time', { length: 10 }).notNull(),
+  endTime: text('end_time', { length: 10 }).notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 课程表
-export const timetables = pgTable('timetables', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
-  termId: uuid('term_id').references(() => terms.id).notNull(),
-  sourceId: uuid('source_id').unique(),
-  title: varchar('title', { length: 100 }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+export const timetables = sqliteTable('timetables', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').references(() => users.id).notNull(),
+  termId: text('term_id').references(() => terms.id).notNull(),
+  sourceId: text('source_id').unique(),
+  title: text('title', { length: 100 }).notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 课程
-export const courses = pgTable('courses', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  timetableId: uuid('timetable_id').references(() => timetables.id).notNull(),
-  title: varchar('title', { length: 100 }).notNull(),
-  teacher: varchar('teacher', { length: 50 }),
-  color: varchar('color', { length: 20 }),
+export const courses = sqliteTable('courses', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  timetableId: text('timetable_id').references(() => timetables.id).notNull(),
+  title: text('title', { length: 100 }).notNull(),
+  teacher: text('teacher', { length: 50 }),
+  color: text('color', { length: 20 }),
   remark: text('remark'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 课次
-export const courseSessions = pgTable('course_sessions', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  courseId: uuid('course_id').references(() => courses.id).notNull(),
+export const courseSessions = sqliteTable('course_sessions', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  courseId: text('course_id').references(() => courses.id).notNull(),
   weekday: integer('weekday').notNull(),         // 1-7
   startSection: integer('start_section').notNull(),
   endSection: integer('end_section').notNull(),
   startWeek: integer('start_week').default(1).notNull(),
   endWeek: integer('end_week').default(20).notNull(),
-  weekType: weekTypeEnum('week_type').default('all').notNull(),
+  weekType: text('week_type', { enum: ['all', 'odd', 'even'] }).default('all').notNull(),
   note: text('note'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 上课地点
-export const locations = pgTable('locations', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  sessionId: uuid('session_id').references(() => courseSessions.id).notNull(),
-  locationText: varchar('location_text', { length: 100 }).notNull(),
-  building: varchar('building', { length: 50 }),
-  room: varchar('room', { length: 30 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+export const locations = sqliteTable('locations', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  sessionId: text('session_id').references(() => courseSessions.id).notNull(),
+  locationText: text('location_text', { length: 100 }).notNull(),
+  building: text('building', { length: 50 }),
+  room: text('room', { length: 30 }),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 数据来源
-export const timetableSources = pgTable('timetable_sources', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+export const timetableSources = sqliteTable('timetable_sources', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').references(() => users.id).notNull(),
   originalUrl: text('original_url').notNull(),
   finalUrl: text('final_url'),
-  sourceType: varchar('source_type', { length: 20 }).default('UNKNOWN').notNull(),
-  importerKey: varchar('importer_key', { length: 50 }),
+  sourceType: text('source_type', { length: 20 }).default('UNKNOWN').notNull(),
+  importerKey: text('importer_key', { length: 50 }),
   etag: text('etag'),
   lastModified: text('last_modified'),
-  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
-  syncStatus: varchar('sync_status', { length: 20 }).default('idle').notNull(),
+  lastSyncedAt: text('last_synced_at'),
+  syncStatus: text('sync_status', { length: 20 }).default('idle').notNull(),
   errorMessage: text('error_message'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 同步记录
-export const syncRecords = pgTable('sync_records', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  sourceId: uuid('source_id').references(() => timetableSources.id).notNull(),
-  status: varchar('status', { length: 20 }).notNull(),
+export const syncRecords = sqliteTable('sync_records', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  sourceId: text('source_id').references(() => timetableSources.id).notNull(),
+  status: text('status', { length: 20 }).notNull(),
   message: text('message'),
-  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
-  finishedAt: timestamp('finished_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  startedAt: text('started_at').notNull().$defaultFn(() => new Date().toISOString()),
+  finishedAt: text('finished_at'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 })
 
 // 关系定义

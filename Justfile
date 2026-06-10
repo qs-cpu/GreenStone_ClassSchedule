@@ -69,55 +69,22 @@
 @build-apk-default:
   flutter build apk
 
-# 启动数据库
-db-start:
-  docker start greenstone-db 2>/dev/null || docker run -d --name greenstone-db \
-    -e POSTGRES_PASSWORD=password \
-    -e POSTGRES_DB=greenstone \
-    -p 5432:5432 \
-    -v greenstone-postgres-data:/var/lib/postgresql/data \
-    postgres:14
-
-# 停止数据库
-db-stop:
-  docker stop greenstone-db && docker rm greenstone-db
-
 # 数据库迁移
-db-migrate:
-  cd app && DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/greenstone" bun run drizzle-kit push --config drizzle.config.ts
+@db-migrate:
+  cd app && DATABASE_PATH="data/greenstone.db" bun run drizzle-kit push --config drizzle.config.ts
 
 # 创建管理员账号（如已存在则跳过）
-db-seed-admin:
-  cd app && DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/greenstone" bun run src/seed-admin.ts
+@db-seed-admin:
+  cd app && DATABASE_PATH="data/greenstone.db" bun run src/seed-admin.ts
 
 # 数据库迁移并创建管理员
-db-setup: db-migrate db-seed-admin
+@db-setup: db-migrate db-seed-admin
   echo "数据库迁移和管理员创建完成"
 
-# 数据库 Shell
-db-shell:
-  docker exec -it greenstone-db psql -U postgres -d greenstone
-
-# 启动 Redis
-redis-start:
-  docker start greenstone-redis 2>/dev/null || docker run -d --name greenstone-redis \
-    -p 6379:6379 \
-    -v $(pwd)/app/data/redis:/data \
-    redis:6
-
-# 停止 Redis
-redis-stop:
-  docker stop greenstone-redis && docker rm greenstone-redis
-
 # 一键启动后端
-start:
-  just db-start
-  just redis-start
+@start:
   cd app && bun run dev
 
-# 完整部署（启动数据库 + 迁移 + 创建管理员 + 启动后端）
-deploy:
-  just db-start
-  just redis-start
-  just db-setup
+# 完整部署（迁移 + 创建管理员 + 启动后端）
+@deploy: db-setup
   cd app && bun run dev

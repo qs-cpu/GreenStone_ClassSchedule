@@ -13,24 +13,14 @@ COPY app/package.json app/bun.lock ./
 RUN bun install
 COPY app ./
 
-# 单容器运行 PostgreSQL、Redis、Bun/Elysia。
-FROM postgres:14
+# 运行时 — 单容器 Bun + SQLite。
+FROM oven/bun:1-slim
 
-ENV POSTGRES_DB=greenstone
-ENV POSTGRES_USER=postgres
-ENV POSTGRES_PASSWORD=password
-ENV PGDATA=/data/postgres
-ENV DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/greenstone
-ENV JWT_SECRET=docker-dev-only-change-in-production
-ENV REDIS_HOST=127.0.0.1
-ENV REDIS_PORT=6379
 ENV PUBLIC_DIR=/app/public
+ENV DATABASE_PATH=/data/greenstone.db
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends redis-server ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /data
 
-COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=api-builder /src/app /app
 COPY --from=web-builder /src/build/web /app/public
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint-greenstone
