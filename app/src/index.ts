@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { cors } from '@elysiajs/cors'
+import { existsSync } from 'node:fs'
 import { join, normalize } from 'node:path'
 import { timetableRoutes } from './routes/timetable'
 import { importRoutes } from './routes/import'
@@ -10,8 +11,11 @@ import { adminUserRoutes } from './routes/admin/users'
 import { config } from './config'
 
 const publicDir = process.env.PUBLIC_DIR || './public'
+const hasPublicDir = existsSync(publicDir)
 
 async function serveWeb(pathname: string) {
+  if (!hasPublicDir) return new Response('Not Found', { status: 404 })
+
   const requestedPath = pathname === '/' ? '/index.html' : pathname
   const safePath = normalize(requestedPath).replace(/^\.\.(\/|\\|$)/, '')
   const file = Bun.file(join(publicDir, safePath))
@@ -24,16 +28,21 @@ async function serveWeb(pathname: string) {
 }
 
 const app = new Elysia()
-  .use(cors())
+  .use(cors({ origin: true }))
+  .get('/api/health', () => ({ status: 'ok' }))
   .use(authRoutes)
   .use(timetableRoutes)
   .use(importRoutes)
   .use(sourceRoutes)
   .use(importJwcRoutes)
   .use(adminUserRoutes)
-  .get('/', () => serveWeb('/'))
-  .get('/*', ({ path }) => serveWeb(path))
-  .listen(config.app.port)
+
+if (hasPublicDir) {
+  app.get('/', () => serveWeb('/'))
+  app.get('/*', ({ path }) => serveWeb(path))
+}
+
+app.listen(config.app.port)
 
 console.log(`Server running at ${app.server?.url}`)
 

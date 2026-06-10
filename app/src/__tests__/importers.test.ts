@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
-import { IcsImporter } from '../../parsers/importers/ics.importer'
-import { JsonImporter } from '../../parsers/importers/json.importer'
+import { IcsImporter } from '../parsers/importers/ics.importer'
+import { JsonImporter } from '../parsers/importers/json.importer'
 
 const icsImporter = new IcsImporter()
 const jsonImporter = new JsonImporter()

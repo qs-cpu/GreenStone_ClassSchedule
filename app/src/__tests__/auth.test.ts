@@ -2,7 +2,7 @@
 process.env.JWT_SECRET = 'test-secret-key-for-unit-tests-must-be-64chars'
 
 import { describe, it, expect, beforeAll } from 'bun:test'
-import { AuthService } from '../../services/auth.service'
+import { AuthService } from '../services/auth.service'
 
 const auth = new AuthService()
 

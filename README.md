@@ -1,152 +1,60 @@
 # GreenStone ClassSchedule
 
-A new Flutter project.
+全栈课程表管理应用 — Flutter 前端 + Bun/Elysia 后端 + SQLite 数据库，支持 Web 和 Android。
 
-## 调试指南
-
-Web、Android 真机、模拟器、WSL 后端、`adb reverse`、APK 构建安装等详细流程见：
-
-- [DEBUG_GUIDE.md](./DEBUG_GUIDE.md)
-
-## Environment Deployment Process
-
-### Flutter 开发
-
-环境变量由 `direnv` 来管理：
-
-> Direnv 是一个 shell 扩展工具，用于根据当前目录自动加载/卸载环境变量，非常适合管理开发工具链路径。
-
-#### Direnv
-
-首先安装 direnv 包，并让其加入当前 shell 的配置，这里使用 zsh：
+## 快速开始
 
 ```bash
-sudo apt install direnv
-echo 'eval "$(direnv hook zsh)"' >> ~/.zshenv
-source ~/.zshenv
-```
-
-如果是 bash：
-
-```bash
-echo 'if [ -f ~/.bashrc ]; then source ~/.bashrc; fi' >> ~/.bash_profile
-echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-随后使用 `touch ./.envrc` 在项目下新建配置文件，写入以下内容（已兼容多发行版的 Java 路径探测）：
-
-```bash
-# Java
-if [ -d "/usr/lib/jvm/java-1.17.0-openjdk-amd64" ]; then
-    export JAVA_HOME="/usr/lib/jvm/java-1.17.0-openjdk-amd64"  # Ubuntu
-elif [ -d "/usr/lib/jvm/java-17-openjdk" ]; then
-    export JAVA_HOME="/usr/lib/jvm/java-17-openjdk"            # Arch Linux
-elif command -v java >/dev/null 2>&1; then
-    export JAVA_HOME=$(dirname $(dirname $(readlink -f $(command -v java))))
-else
-    echo "Direnv: ⚠️ 无法自动定位 JAVA_HOME，请手动设置"
-fi
-
-# Android SDK
-export ANDROID_HOME="$HOME/Android/Sdk"
-export ANDROID_SDK_ROOT="$ANDROID_HOME"
-
-# PATH
-export PATH="$ANDROID_HOME/platform-tools:$PATH"
-export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-
-# Flutter
-export PATH="$HOME/flutter/bin:$PATH"
-```
-
-随后使用 `direnv allow` 即可每次进入该目录的时候自动激活环境变量。
-
-#### Android SDK
-
-随后安装安卓 SDK 工具链，首先从 Google 官网下载 commandlinetools：
-
-```bash
-mkdir -p ~/Android/Sdk
-cd ~/Android/Sdk
-
-wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-unzip commandlinetools-linux-*.zip -d tmp
-mkdir -p cmdline-tools/latest
-mv tmp/cmdline-tools/* cmdline-tools/latest/
-rm -rf tmp
-```
-
-随后使用其中的 `sdkmanager` 下载 platforms 和 build-tools，注意版本为 36：
-
-```bash
-sdkmanager \
-  "cmdline-tools;latest" \
-  "platform-tools" \
-  "platforms;android-36" \
-  "build-tools;36.0.0"
-
-sdkmanager --licenses
-```
-
-#### Flutter
-
-现在下载 Flutter 工具链，使用 GitHub 下载并同意 license：
-
-```bash
-git clone https://github.com/flutter/flutter.git ~/flutter
-
-## 告诉 Flutter SDK Android SDK 安装位置
-flutter config --android-sdk $HOME/Android/Sdk
-## 检查开发环境是否完整，并提示缺失的依赖
-flutter doctor
-## 同意 Flutter 编译 APK 所需的 Android 协议
-flutter doctor --android-licenses
-## 提前下载 Android 构建依赖，加快后续构建速度
-flutter precache --android
-```
-
-#### Build apk
-
-随后即可构建 apk 并进行安装测试。Web 端默认访问 `http://localhost:3001`，Android 模拟器默认访问 `http://10.0.2.2:3001`，真机或生产环境请通过 `API_URL` 指定后端地址：
-
-```bash
+# 初始化
 just init
-just run-android
-just run-android-url http://192.168.1.10:3001
-just build-apk-release-url http://192.168.1.10:3001
+
+# 启动后端
+just api        # → http://localhost:3001
+
+# 启动前端（新终端）
+just web        # → http://localhost:PORT
+
+# 或两个终端分别跑上面的命令
 ```
 
-常用命令：
+首次使用：浏览器打开前端地址 → 注册 → 登录 → 导入课表。
+
+## 文档
+
+- [架构总览](docs/structure.md) — 系统架构、目录结构、数据库设计、设计决策
+- [API 参考](docs/api.md) — 所有 REST 端点、请求/响应格式
+- [开发指南](docs/dev-guide.md) — 环境搭建、Justfile 命令、Docker 部署
+- [用户指南](docs/usage.md) — 登录注册、课程表操作、导入方式
+- [测试指南](docs/testing.md) — 运行测试、覆盖率目标
+
+## 常用命令
 
 ```bash
-# Web
-just run-web
-just build-web
-
-# Android
-just devices
-just run-android
-just build-apk-debug
-just build-apk-release
+just start       # 一键启动前后端
+just api         # 仅后端
+just web         # 仅前端
+just db-setup    # 数据库迁移 + 创建管理员
+just build-apk   # 构建 Release APK
+just build-web   # 构建 Flutter Web
+flutter test     # 运行前端测试
+cd app && bun test  # 运行后端测试
 ```
 
-Release 签名不再使用 debug key。正式发布前请复制 `android/key.properties.example` 为 `android/key.properties`，并配置真实签名信息：
+## 技术栈
 
-```properties
-storePassword=your_store_password
-keyPassword=your_key_password
-keyAlias=your_key_alias
-storeFile=../release-key.jks
-```
+| 层 | 技术 |
+|---|---|
+| 前端 | Flutter · Riverpod · GoRouter · Dio · Freezed |
+| 后端 | Bun · Elysia · TypeScript |
+| 数据库 | SQLite (bun:sqlite + Drizzle ORM) |
+| 认证 | JWT (jose) + bcryptjs |
+| 部署 | Docker (oven/bun:1-slim) |
 
-如果还没有 keystore，可以在 `android/` 目录生成：
+## Docker 部署
 
 ```bash
-keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias greenstone
+docker compose up -d --build
+# → http://localhost:8080
 ```
 
-
-netsh interface portproxy add v4tov4 listenaddress=127.0.0.1 listenport=3001 connectaddress=172.20.81.39 connectport=3001
-adb reverse tcp:3001 tcp:3001
-flutter run -d AGQV023327008385 --dart-define=API_URL=http://127.0.0.1:3001
+单容器运行，自动初始化数据库，无需配置环境变量。
