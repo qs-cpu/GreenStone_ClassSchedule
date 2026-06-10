@@ -61,7 +61,6 @@ POST /api/auth/login
 
 登录成功后，token 存入 `FlutterSecureStorage`，用户信息存入 `SharedPreferences`。前端自动将 token 附加到后续所有非 auth 请求。
 
-> ⚠️ 密码哈希存在不一致：`routes/auth.ts` 用 `Bun.password`，`services/auth.service.ts` 用 `bcryptjs`。当前注册用 Bun，管理员创建用户用 bcryptjs。
 
 ---
 

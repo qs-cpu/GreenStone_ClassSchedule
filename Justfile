@@ -1,90 +1,79 @@
-# 一键初始化
+# ── 环境 ──────────────────────────────────────
 @init:
   flutter clean
   flutter pub get
+  cd app && bun install
 
-# 清理
 @clean:
   flutter clean
 
-# 获取依赖
 @get:
   flutter pub get
 
-# 分析代码
-@analyze:
-  flutter analyze
+# ── 开发 ──────────────────────────────────────
+# 一键启动前后端（并发）
+@start:
+  #!/usr/bin/env bash
+  set -m
+  cd app && bun run dev &
+  flutter run -d web-server &
+  fg %1
 
-# 格式化
-@fmt:
-  dart format .
-
-# 升级依赖检查
-@outdated:
-  flutter pub outdated
-
-# 彻底重建
-@rebuild:
-  flutter clean
-  flutter pub get
-  just run
-
-# 查看设备
-@devices:
-  flutter devices
-
-# Web运行
-@run-web:
+# 仅前端
+@web:
   flutter run -d web-server
 
-# Android运行
-@run-android:
-  flutter run -d android
+# 仅后端
+@api:
+  cd app && bun run dev
 
-# Android运行（指定后端地址，适合真机或非默认环境）
-@run-android-url api_url:
-  flutter run -d android --dart-define=API_URL="{{api_url}}"
+# 首次部署（迁移 + 种子管理员 + 启动）
+@deploy: db-setup
+  #!/usr/bin/env bash
+  set -m
+  cd app && bun run dev &
+  flutter run -d web-server &
+  fg %1
 
-# 构建 Web
+# ── 构建 ──────────────────────────────────────
 @build-web:
   flutter build web
 
-# 构建 Debug APK
 @build-apk-debug:
   flutter build apk --debug
 
-# 构建 APK（保持 Flutter 默认行为，兼容旧流程）
 @build-apk:
-  flutter build apk
-
-# 构建 Release APK（显式命令）
-@build-apk-release:
   flutter build apk --release
 
-# 构建 Release APK（指定后端地址，适合真机或生产环境）
-@build-apk-release-url api_url:
+@build-apk-url api_url:
   flutter build apk --release --dart-define=API_URL="{{api_url}}"
 
-# 构建默认 APK（兼容旧命令）
-@build-apk-default:
-  flutter build apk
-
-# 数据库迁移
+# ── 数据库 ────────────────────────────────────
 @db-migrate:
-  cd app && DATABASE_PATH="data/greenstone.db" bun run drizzle-kit push --config drizzle.config.ts
+  cd app && bun run drizzle-kit push --config drizzle.config.ts
 
-# 创建管理员账号（如已存在则跳过）
 @db-seed-admin:
-  cd app && DATABASE_PATH="data/greenstone.db" bun run src/seed-admin.ts
+  cd app && bun run src/seed-admin.ts
 
-# 数据库迁移并创建管理员
 @db-setup: db-migrate db-seed-admin
   echo "数据库迁移和管理员创建完成"
 
-# 一键启动后端
-@start:
-  cd app && bun run dev
+# ── 工具 ──────────────────────────────────────
+@analyze:
+  flutter analyze
 
-# 完整部署（迁移 + 创建管理员 + 启动后端）
-@deploy: db-setup
-  cd app && bun run dev
+@fmt:
+  dart format .
+
+@outdated:
+  flutter pub outdated
+
+@devices:
+  flutter devices
+
+# ── Android 真机 ──────────────────────────────
+@android:
+  flutter run -d android
+
+@android-url api_url:
+  flutter run -d android --dart-define=API_URL="{{api_url}}"

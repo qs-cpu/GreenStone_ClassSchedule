@@ -17,7 +17,7 @@ GreenStone ClassSchedule 是一个全栈课程表管理应用，Flutter 前端 +
 │  Auth  │  Timetable  │  Import  │  Source  │  Admin       │
 │  Import-JWC (教务系统直连)  │  静态文件 (Flutter Web)      │
 ├──────────────────────────────────────────────────────────┤
-│  PostgreSQL (Drizzle ORM)  │  Redis (ioredis, 未使用)      │
+│  SQLite (bun:sqlite, WAL 模式)                            │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -117,7 +117,6 @@ GreenStone_ClassSchedule/
 │       │   └── utils/
 │       │       ├── captcha.recognizer.ts  # BMP 验证码识别 (XOR 字模匹配)
 │       │       └── http.client.ts         # Cookie 管理 + form-urlencoded
-│       ├── lib/redis.ts             # Redis 连接 (声明但未使用)
 │       ├── utils/url.validator.ts   # URL 白名单校验
 │       ├── seed.ts                  # 数据库种子脚本
 │       └── seed-admin.ts            # 管理员初始化
@@ -217,7 +216,6 @@ GreenStone_ClassSchedule/
 
 | API | 位置 | 说明 |
 |-----|------|------|
-| `Bun.password.hash/verify` | `routes/auth.ts` | 密码哈希（与 `AuthService` 中的 `bcryptjs` 不一致，待统一） |
 | `Bun.file()` | `index.ts` | 静态文件读取 |
 
 ### 教务系统爬虫
@@ -293,7 +291,7 @@ POST /api/import { url }
 |---|---|---|
 | id | UUID PK | `defaultRandom()` |
 | username | VARCHAR(50) UNIQUE | |
-| password_hash | TEXT | bcryptjs / Bun.password 哈希 |
+| password_hash | TEXT | bcryptjs 哈希 (10 轮) |
 | nickname | VARCHAR(100) | |
 | role | ENUM('user','admin') | 默认 'user' |
 | created_at | TIMESTAMPTZ | |
@@ -408,8 +406,7 @@ POST /api/import { url }
 | `elysia` | Bun 原生 HTTP 框架 |
 | `drizzle-orm` + `pg` | PostgreSQL ORM + 迁移 |
 | `jose` | JWT 签发/验证 |
-| `bcryptjs` / `Bun.password` | 密码哈希 (存在不一致) |
-| `ioredis` | Redis 客户端 (声明但未使用) |
+| `bcryptjs` | 密码哈希 |
 | `axios` | 服务端 HTTP 请求 |
 | `htmlrewriter` | HTML 解析 (Cloudflare WASM polyfill) |
 | `fast-bmp` | BMP 验证码解码 |

@@ -7,25 +7,23 @@
 - **Bun** 1.x （`curl -fsSL https://bun.sh/install | bash`）
 - **Java** 17 （Android 构建必需，`sudo apt install openjdk-17-jdk`）
 - **Android SDK** （commandlinetools + platform 36 + build-tools 36）
-- **Docker** （PostgreSQL + Redis）
-- **direnv** （自动加载环境变量）
+- **direnv** （自动加载环境变量，可选）
 - **just** （命令运行器，`cargo install just` 或 `apt install just`）
+
+Docker 仅用于生产部署，本地开发不需要。
 
 ## 环境初始化
 
-### 1. direnv 配置
+### 1. direnv 配置（可选）
 
 ```bash
-# 安装
 sudo apt install direnv
 
 # zsh
 echo 'eval "$(direnv hook zsh)"' >> ~/.zshenv && source ~/.zshenv
-
 # bash
 echo 'eval "$(direnv hook bash)"' >> ~/.bashrc && source ~/.bashrc
 
-# 允许项目 .envrc
 cd GreenStone_ClassSchedule && direnv allow
 ```
 
@@ -63,7 +61,6 @@ sdkmanager \
   "platform-tools" \
   "platforms;android-36" \
   "build-tools;36.0.0"
-
 sdkmanager --licenses
 ```
 
@@ -80,77 +77,61 @@ flutter precache --android
 ### 4. 项目初始化
 
 ```bash
-just init          # flutter clean + flutter pub get
+just init          # flutter clean + pub get + bun install
 ```
 
-### 5. 数据库和缓存
+### 5. 数据库
 
-```bash
-just db-start      # 启动 PostgreSQL (Docker)
-just redis-start   # 启动 Redis (Docker)
-just db-setup      # 迁移 + 创建管理员
-```
-
-或者一键启动后端（含数据库）：
-
-```bash
-just start         # 启动 DB + Redis + Bun 后端
-```
+SQLite 零配置——首次 `just api` 或 `just start` 会自动创建 `app/data/greenstone.db`。
+如需种子管理员：`just db-setup`。
 
 ---
 
 ## 日常开发
 
 ```bash
-# Flutter Web
-just run-web                       # → http://localhost:PORT
-
-# Flutter Android (模拟器)
-just run-android                   # 默认连接 10.0.2.2:3001
-
-# Flutter Android (真机，指定后端)
-just run-android-url http://192.168.1.10:3001
-
-# 仅启动后端
-cd app && bun run dev              # → http://localhost:3001
+just start         # 并发启动前后端（推荐）
+just web           # 仅 Flutter Web
+just api           # 仅 Bun 后端 → http://localhost:3001
+just android       # Android 模拟器
+just android-url http://192.168.1.10:3001  # Android 真机
 
 # 代码检查
-just analyze                       # flutter analyze
-
-# 代码格式化
-just fmt                           # dart format .
+just analyze       # flutter analyze
+just fmt           # dart format .
 ```
 
 启动后：
 
-- **Web 前端**：`http://localhost:PORT`（Flutter 输出提示）
-- **后端 API**：`http://localhost:3001`
-- **API 测试**：浏览器直接 GET `/api/health` 或使用 `curl`
+- **前端**：`http://localhost:PORT`（`just start` 输出提示）
+- **后端**：`http://localhost:3001`
+- **API 测试**：`curl http://localhost:3001/api/health`
 
 ---
 
 ## Justfile 命令速查
 
-### Flutter
+### 环境
 
 | 命令 | 说明 |
 |------|------|
-| `just init` | flutter clean + pub get |
+| `just init` | flutter clean + pub get + bun install |
 | `just clean` | flutter clean |
 | `just get` | flutter pub get |
 | `just analyze` | flutter analyze |
 | `just fmt` | dart format . |
 | `just outdated` | flutter pub outdated |
-| `just rebuild` | clean + get + run |
 | `just devices` | flutter devices |
 
 ### 运行
 
 | 命令 | 说明 |
 |------|------|
-| `just run-web` | flutter run -d web-server |
-| `just run-android` | flutter run -d android |
-| `just run-android-url <url>` | 指定后端地址运行 Android |
+| `just start` | 并发启动前端 (web-server) + 后端 (bun dev) |
+| `just web` | 仅 Flutter Web |
+| `just api` | 仅 Bun 后端 (:3001) |
+| `just android` | flutter run -d android |
+| `just android-url <url>` | 指定后端地址运行 Android |
 
 ### 构建
 
@@ -158,29 +139,22 @@ just fmt                           # dart format .
 |------|------|
 | `just build-web` | flutter build web |
 | `just build-apk-debug` | 构建 Debug APK |
-| `just build-apk` | 构建默认 APK |
-| `just build-apk-release` | 构建 Release APK |
-| `just build-apk-release-url <url>` | 指定后端地址构建 Release APK |
+| `just build-apk` | 构建 Release APK |
+| `just build-apk-url <url>` | 指定后端地址构建 Release APK |
 
 ### 数据库
 
 | 命令 | 说明 |
 |------|------|
-| `just db-start` | 启动 PostgreSQL (Docker, 端口 5432) |
-| `just db-stop` | 停止并删除 PostgreSQL 容器 |
-| `just db-migrate` | Drizzle Kit 数据库迁移 |
-| `just db-seed-admin` | 创建管理员账号（已存在则跳过） |
+| `just db-migrate` | Drizzle Kit push schema |
+| `just db-seed-admin` | 创建管理员账号 |
 | `just db-setup` | 迁移 + 创建管理员 |
-| `just db-shell` | 进入 PostgreSQL shell |
-| `just redis-start` | 启动 Redis (Docker, 端口 6379) |
-| `just redis-stop` | 停止并删除 Redis 容器 |
 
-### 后端
+### 部署
 
 | 命令 | 说明 |
 |------|------|
-| `just start` | 启动 DB + Redis + Bun 后端 |
-| `just deploy` | 完整部署（启动 DB/Redis → 迁移 → 创建管理员 → 启动后端） |
+| `just deploy` | db-setup + 启动前后端 |
 
 ---
 
@@ -207,11 +181,8 @@ storeFile=../release-key.jks
 ### 构建
 
 ```bash
-# 不指定后端地址（使用默认 localhost）
-just build-apk-release
-
-# 指定生产环境后端地址
-just build-apk-release-url https://api.example.com
+just build-apk                        # 默认后端地址
+just build-apk-url https://api.example.com  # 指定生产环境后端
 ```
 
 ---
@@ -220,30 +191,23 @@ just build-apk-release-url https://api.example.com
 
 ### 构建与启动
 
-项目根目录配置 `.env`：
-
-```env
-DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/greenstone
-JWT_SECRET=your-secret-key
-```
-
-构建并启动：
-
 ```bash
 docker compose up -d --build
-# → http://localhost:3001 （前后端一体化）
+# → http://localhost:8080
 ```
+
+不需要 `.env` —— JWT_SECRET 自动生成到 `/data/jwt_secret`，数据库自动创建到 `/data/greenstone.db`。
 
 ### Dockerfile 结构
 
 ```
-Stage 1: cirruslabs/flutter:stable   → flutter build web (--release)
+Stage 1: cirruslabs/flutter:stable   → flutter build web
 Stage 2: oven/bun:1                  → bun install 后端依赖
-Stage 3: postgres:14                 → Pg + Redis + Bun + Flutter Web 静态文件
+Stage 3: oven/bun:1-slim             → Bun + SQLite + Flutter Web 静态文件
                                        docker-entrypoint.sh 启动一切
 ```
 
-单容器运行：PostgreSQL → Redis → Bun/Elysia。Flutter Web 文件复制到 `/app/public`，由 `Bun.file()` 服务。
+单容器运行，一个进程，一个 `.db` 文件。Flutter Web 复制到 `/app/public`，由 `Bun.file()` 服务。
 
 ### 更新部署
 
@@ -254,8 +218,7 @@ git pull && docker compose up -d --build
 ### 重置数据库
 
 ```bash
-docker compose down -v
-docker compose up -d --build
+docker compose down -v && docker compose up -d --build
 ```
 
 ---
@@ -264,29 +227,40 @@ docker compose up -d --build
 
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
-| `DATABASE_URL` | 是 | — | PostgreSQL 连接串，格式 `postgresql://user:pass@host:5432/db` |
-| `JWT_SECRET` | 否 | `greenstone-secret-key` | JWT 签名密钥，**生产务必修改** |
-| `REDIS_HOST` | 否 | `localhost` | Redis 地址 |
-| `REDIS_PORT` | 否 | `6379` | Redis 端口 |
-| `PORT` | 否 | `3000` | 后端端口（入口文件写死 3001，未使用此变量） |
+| `DATABASE_PATH` | 否 | `data/greenstone.db` | SQLite 文件路径 |
+| `JWT_SECRET` | 否 | 自动生成存到 `data/jwt_secret` | JWT 签名密钥 |
+| `PORT` | 否 | `3001` | 后端端口 |
 | `PUBLIC_DIR` | 否 | `./public` | Flutter Web 静态文件目录 |
-| `API_URL` | 否 | Web 自动 `localhost:3001` / Android 自动 `10.0.2.2:3001` | Dart 编译时 `--dart-define=API_URL=...` 注入 |
-| `ALLOW_INSECURE_API` | 否 | debug 模式 `true`，release 模式 `false` | 允许 HTTP 明文 API（Release 默认要求 HTTPS） |
+| `API_URL` | 否 | Web: `localhost:3001` / Android: `10.0.2.2:3001` | Dart 编译时 `--dart-define=API_URL=...` |
+| `ALLOW_INSECURE_API` | 否 | debug: `true` / release: `false` | 允许 HTTP 明文 API |
 
 ---
 
 ## 添加新学校
 
-1. 在 `app/src/parsers/schools/` 创建 `xxx.fetcher.ts`，实现登录 + 抓取逻辑
-2. 在 `app/src/parsers/schools/xxx.parser.ts` 中实现 HTML → `ParsedCourse[]` 解析
+1. 在 `app/src/parsers/schools/` 创建 `xxx.fetcher.ts`，实现登录 + 抓取
+2. 在 `app/src/parsers/schools/xxx.parser.ts` 中实现 HTML → `ParsedCourse[]`
 3. 在 `app/src/parsers/schools/index.ts` 的 `schools` 注册表添加新学校
 4. 在 `app/src/routes/import-jwc.ts` 的 `createSchoolFetcher()` 中添加分支
 
-## 添加新的导入格式
+## 添加新导入格式
 
-1. 在 `app/src/parsers/importers/` 创建新 importer，实现 `ITimetableImporter` 接口
-2. 在 `app/src/services/import.service.ts` 的 `this.importers` 数组中注册
+1. 在 `app/src/parsers/importers/` 创建新 importer，实现 `ITimetableImporter`
+2. 在 `app/src/services/import.service.ts` 的 `this.importers` 中注册
 3. 在 `app/src/parsers/strategies/detector.ts` 中添加类型检测逻辑
+
+## 运行测试
+
+```bash
+# 前端
+flutter test
+
+# 后端
+cd app && bun test
+cd app && bun test --coverage
+```
+
+详见 [docs/testing.md](testing.md)。
 
 ---
 
@@ -294,14 +268,12 @@ docker compose up -d --build
 
 ### VM / WSL 中 `adb` 连不上真机
 
-使用 Windows 端口转发：
-
 ```powershell
 # 管理员 PowerShell
 netsh interface portproxy add v4tov4 listenaddress=127.0.0.1 listenport=3001 connectaddress=172.20.81.39 connectport=3001
 ```
 
-或使用 `adb reverse`：
+或：
 
 ```bash
 adb reverse tcp:3001 tcp:3001
@@ -310,24 +282,20 @@ flutter run -d <device_id> --dart-define=API_URL=http://127.0.0.1:3001
 
 ### Flutter Web 访问后端报 CORS
 
-后端已配置 `@elysiajs/cors`，默认允许所有来源。如果遇到问题，检查 `app/src/index.ts` 中 `.use(cors())` 是否存在。
+后端已配置 `@elysiajs/cors`。检查 `app/src/index.ts` 中 `.use(cors())` 存在。
 
-### 后端启动报 `password authentication failed`
+### 后端启动报 `JWT_SECRET` 相关错误
 
-检查 `DATABASE_URL` 中用户名和密码是否匹配 Docker 容器默认值（`postgres:password`），或执行 `just db-start` 重建容器。
-
-### Drizzle 迁移报错
-
-确保 PostgreSQL 容器正在运行：`docker ps | grep greenstone-db`。然后重新执行 `just db-migrate`。
+`config/index.ts` 首次运行自动生成密钥到 `data/jwt_secret`。如果手动设过 `JWT_SECRET=greenstone-secret-key`（已拒绝），改为不设置让自动生成。
 
 ### Android 构建报 SDK 找不到
 
-检查 `ANDROID_HOME` 环境变量：`echo $ANDROID_HOME`。`direnv allow` 后重新进入目录。
+`echo $ANDROID_HOME`，检查 `direnv allow` 是否生效。
 
-### Web 构建时 `API_URL` 为空导致请求 `/api/...` 走同源
+### Web 构建时 `API_URL` 为空导致请求同源
 
-这是正常行为——Docker 部署时 Flutter Web 与后端同容器，API 同源。本地开发时 Web 自动使用 `localhost:3001`。
+正常行为——Docker 部署时前后端同容器。本地开发自动使用 `localhost:3001`。
 
 ### 前端报 `UnimplementedError: sharedPreferencesProvider must be overridden`
 
-检查 `main.dart` 中 `ProviderScope(overrides: [...])` 是否正确覆盖了 `sharedPreferencesProvider`。如果测试时遇到，需在测试中 mock。
+测试中需要 mock `SharedPreferences` 和 `FlutterSecureStorage`。参考 `test/app/app_router_test.dart`。

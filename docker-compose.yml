@@ -8,8 +8,6 @@ services:
     restart: unless-stopped
     ports:
       - "8080:3001"
-    environment:
-      JWT_SECRET: ${JWT_SECRET:-}
     volumes:
       - greenstone-data:/data
 
