@@ -1,43 +1,26 @@
 # GreenStone ClassSchedule
 
-全栈课程表管理应用 — Flutter 前端 + Bun/Elysia 后端 + SQLite 数据库，支持 Web 和 Android。
+全栈课程表管理应用 — Flutter + Bun/Elysia + SQLite，支持 Web 和 Android。零配置启动。
 
 ## 快速开始
 
 ```bash
-# 初始化
-just init
-
-# 启动后端
-just api        # → http://localhost:3001
-
-# 启动前端（新终端）
-just web        # → http://localhost:PORT
-
-# 或两个终端分别跑上面的命令
+just init      # 安装依赖（仅首次）
+just start     # 一键启动前后端 → http://localhost:45441
 ```
 
-首次使用：浏览器打开前端地址 → 注册 → 登录 → 导入课表。
-
-## 文档
-
-- [架构总览](docs/structure.md) — 系统架构、目录结构、数据库设计、设计决策
-- [API 参考](docs/api.md) — 所有 REST 端点、请求/响应格式
-- [开发指南](docs/dev-guide.md) — 环境搭建、Justfile 命令、Docker 部署
-- [用户指南](docs/usage.md) — 登录注册、课程表操作、导入方式
-- [测试指南](docs/testing.md) — 运行测试、覆盖率目标
+首次使用：浏览器打开 → 注册 → 登录 → 导入课表。
 
 ## 常用命令
 
 ```bash
-just start       # 一键启动前后端
-just api         # 仅后端
-just web         # 仅前端
-just db-setup    # 数据库迁移 + 创建管理员
+just start       # 一键启动前后端（固定端口 :45441）
+just api         # 仅后端 → http://localhost:3001
+just web         # 仅前端 → http://localhost:45441
+just admin       # 创建管理员账号
+just test        # 运行前后端测试
 just build-apk   # 构建 Release APK
 just build-web   # 构建 Flutter Web
-flutter test     # 运行前端测试
-cd app && bun test  # 运行后端测试
 ```
 
 ## 技术栈
@@ -57,4 +40,12 @@ docker compose up -d --build
 # → http://localhost:8080
 ```
 
-单容器运行，自动初始化数据库，无需配置环境变量。
+单容器运行，自动初始化一切，无需配置环境变量。
+
+## 文档
+
+- [架构总览](docs/structure.md) — 系统架构、目录结构、数据库设计、设计决策
+- [API 参考](docs/api.md) — 所有 REST 端点
+- [开发指南](docs/dev-guide.md) — 环境搭建、命令速查、Docker 部署
+- [用户指南](docs/usage.md) — 登录注册、课程表操作、导入方式
+- [测试指南](docs/testing.md) — 17 项测试、覆盖率目标
