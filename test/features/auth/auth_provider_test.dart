@@ -1,12 +1,15 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:schedule/features/auth/application/auth_provider.dart';
 
-import '../helpers/secure_storage_mock.dart';
+import '../../helpers/secure_storage_mock.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUp(() {
     mockSecureStorageChannel();
   });
@@ -62,7 +65,6 @@ void main() {
       final notifier = TokenNotifier(prefs, const FlutterSecureStorage(), null);
 
       await notifier.setToken('fresh-token');
-      // After migration, the SharedPreferences key should be removed
       expect(prefs.getString('jwt_token'), isNull);
       expect(notifier.state, 'fresh-token');
     });

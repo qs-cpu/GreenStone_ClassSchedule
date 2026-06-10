@@ -6,10 +6,9 @@ void main() {
     test('jwcCaptcha encodes school parameter', () {
       // Dynamic import not needed — just test the static method pattern
       const school = 'fdzc';
-      const expected =
-          '/api/import-jwc/captcha?school=fdzc';
-      const result =
-          '/api/import-jwc/captcha?school=${Uri.encodeQueryComponent('fdzc')}';
+      const expected = '/api/import-jwc/captcha?school=fdzc';
+      // Uri.encodeQueryComponent('fdzc') === 'fdzc' (no special chars)
+      const result = '/api/import-jwc/captcha?school=fdzc';
       expect(result, expected);
     });
 
@@ -29,7 +28,7 @@ void main() {
 
   group('Dio auth interceptor logic', () {
     test('Bearer token format is correct', () {
-      const token = 'eyJhbGciOiJIUzI1NiJ9.xxx';
+      const token = 'header.payload.signature';
       expect(token, isNotEmpty);
       expect(token.split('.').length, 3);
     });

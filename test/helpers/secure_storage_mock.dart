@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Mock the FlutterSecureStorage platform channel so tests don't crash.
 /// All read/write/delete calls succeed silently.
+///
+/// Must be called after TestWidgetsFlutterBinding.ensureInitialized().
 void mockSecureStorageChannel() {
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
