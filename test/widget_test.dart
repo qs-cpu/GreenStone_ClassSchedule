@@ -1,30 +1,57 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:schedule/main.dart';
+import 'package:schedule/features/auth/application/auth_provider.dart';
+
+/// Mock the FlutterSecureStorage platform channel so widget tests don't crash.
+/// All read operations return null (empty storage).
+void _mockSecureStorageChannel() {
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+        (MethodCall methodCall) async => null,
+      );
+}
+
+Widget pumpApp({String? initialToken, required SharedPreferences prefs}) {
+  return ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      initialTokenProvider.overrideWithValue(initialToken),
+    ],
+    child: const MyApp(),
+  );
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  setUp(() {
+    _mockSecureStorageChannel();
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('redirects to login when no token', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(pumpApp(initialToken: null, prefs: prefs));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // 未登录 → 重定向到 /login，应看到登录按钮
+    expect(find.text('登录'), findsOneWidget);
+  });
+
+  testWidgets('renders app bar when token present', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'user_info': '{"id":"t","username":"t","nickname":"T","role":"user"}',
+    });
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(pumpApp(initialToken: 'fake-token', prefs: prefs));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppBar), findsOneWidget);
   });
 }

@@ -1,5 +1,4 @@
 import { HttpClient } from '../utils/http.client'
-import { recognizeCaptcha } from '../utils/captcha.recognizer'
 import { parseLoginLink, parseFullTable, parseBeginDate } from './fdzc.parser'
 import { baseURL } from './fdzc.const'
 import { ParsedCourse } from '../importers/importer.interface'
@@ -15,16 +14,13 @@ export class FdzcFetcher {
 
   async fetchCaptcha(): Promise<Uint8Array> {
     const res1 = await this.client.get('default.asp')
-    console.log('[DEBUG] default.asp:', res1.status, res1.url)
     this.loginURL = await parseLoginLink(await res1.text())
-    console.log('[DEBUG] loginURL:', this.loginURL)
 
     if (!this.loginURL) {
       throw new Error('无法解析教务系统登录地址')
     }
 
     const res2 = await this.client.get('ValidateCookie.asp')
-    console.log('[DEBUG] ValidateCookie.asp:', res2.status, res2.url)
     return new Uint8Array(await res2.arrayBuffer())
   }
 
@@ -34,9 +30,7 @@ export class FdzcFetcher {
     }
 
     const res3 = await this.client.get(`ajax/chkCode.asp?code=${encodeURIComponent(captcha)}&id=${Math.random()}`)
-    console.log('[DEBUG] chkCode.asp:', res3.status, res3.url)
     const chkResult = await res3.text()
-    console.log('[DEBUG] chkResult:', chkResult)
     if (chkResult.trim() !== 'ok') {
       throw new Error('验证码错误，请刷新后重试')
     }
@@ -46,19 +40,11 @@ export class FdzcFetcher {
       passwd: password,
       code: captcha,
     })
-    console.log('[DEBUG] login response:', loginRes.status, loginRes.url)
     const loginHtml = await loginRes.text()
     if (loginRes.url.includes('loginchk.asp') || loginHtml.includes('出错提示')) {
       throw new Error('教务系统登录失败，请检查账号、密码和验证码')
     }
     this.client.setCookie('muser', username)
-  }
-
-  async login(username: string, password: string): Promise<void> {
-    const captchaImage = await this.fetchCaptcha()
-    const captcha = await recognizeCaptcha(captchaImage)
-    console.log('[DEBUG] captcha:', captcha)
-    await this.loginWithCaptcha(username, password, captcha)
   }
 
   async fetchTimetable(year: number, semester: string): Promise<ParsedCourse[]> {
@@ -67,11 +53,8 @@ export class FdzcFetcher {
       xn: year.toString(),
       xq: schoolSemester,
     })
-    console.log('[DEBUG] fetchTimetable response:', res.status, res.url)
 
     const html = await res.text()
-    console.log('[DEBUG] fetchTimetable html length:', html.length)
-    console.log('[DEBUG] fetchTimetable html preview:', html.slice(0, 300))
 
     if (res.url.includes('error.asp') || html.includes('出错提示')) {
       throw new Error('教务系统返回权限错误或登录已失效')
@@ -81,9 +64,7 @@ export class FdzcFetcher {
       throw new Error(`${year}年${schoolSemester}暂无课程记录，请确认学年和上下学期`)
     }
 
-    const courses = await parseFullTable(html)
-    console.log('[DEBUG] parsed courses count:', courses.length)
-    return courses
+    return await parseFullTable(html)
   }
 
   async fetchBeginDate(year: number, semester: string): Promise<[number, number, number]> {

@@ -58,7 +58,6 @@ async function resolveImportOwner(userId: string, termId: string | undefined, ye
 }
 
 export const importJwcRoutes = new Elysia()
-  .onRequest(() => console.log('[DEBUG] import-jwc route hit'))
   .group('/api/import-jwc', (app) =>
     app.get(
       '/captcha',
@@ -132,7 +131,8 @@ export const importJwcRoutes = new Elysia()
             await session.fetcher.loginWithCaptcha(username, password, captcha)
             captchaSessions.delete(captchaId)
           } else {
-            await fetcher.login(username, password)
+            set.status = 400
+            return { error: '请先获取验证码' }
           }
 
           const courses = await activeFetcher.fetchTimetable(year, normalizedSemester)

@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { eq } from 'drizzle-orm'
+import bcrypt from 'bcryptjs'
 import { db, schema } from '../db'
 import { AuthService } from '../services/auth.service'
 
@@ -23,7 +24,7 @@ export const authRoutes = new Elysia()
               return { error: '用户名已存在' }
             }
 
-            const passwordHash = await Bun.password.hash(password)
+            const passwordHash = await bcrypt.hash(password, 10)
             const [user] = await db
               .insert(schema.users)
               .values({
@@ -71,7 +72,7 @@ export const authRoutes = new Elysia()
               return { error: '用户名或密码错误' }
             }
 
-            const isValid = await Bun.password.verify(password, user.passwordHash)
+            const isValid = await bcrypt.compare(password, user.passwordHash)
             if (!isValid) {
               set.status = 401
               return { error: '用户名或密码错误' }
