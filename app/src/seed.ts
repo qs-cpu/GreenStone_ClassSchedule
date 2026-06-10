@@ -1,4 +1,5 @@
 import { db, schema } from './db'
+import bcrypt from 'bcryptjs'
 
 async function seed() {
   console.log('Seeding database...')
@@ -7,6 +8,7 @@ async function seed() {
     .values({
       username: 'testuser',
       nickname: '测试用户',
+      passwordHash: await bcrypt.hash('test123', 10),
     })
     .returning()
 

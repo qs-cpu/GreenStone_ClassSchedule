@@ -4,8 +4,12 @@ import bcrypt from 'bcryptjs'
 
 async function seedAdmin() {
   const username = 'admin'
-  const password = 'admin123'
+  const password = process.env.ADMIN_PASSWORD || 'admin123'
   const nickname = '系统管理员'
+
+  if (!process.env.ADMIN_PASSWORD) {
+    console.warn('ADMIN_PASSWORD not set, using default password "admin123" — change it after first login')
+  }
 
   const existing = await db.query.users.findFirst({
     where: eq(schema.users.username, username),
@@ -35,7 +39,6 @@ async function seedAdmin() {
 
   console.log(`管理员账号创建成功:`)
   console.log(`  用户名: ${username}`)
-  console.log(`  密码: ${password}`)
   console.log(`  ID: ${admin.id}`)
 }
 
